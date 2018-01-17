@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">微信跳一跳助手</string>
+    <string name="show">跳跳助手，启动！</string>
+    <string name="hide">跳跳助手，关闭！</string>
+    <string name="start">开始跳舞！</string>
+    <string name="stopped">自动操作已停止</string>
+    <string name="jump_begin">GO！</string>
+    <string name="no_chess">寻找棋子失败，停止操作</string>
+    <string name="not_stable">等待画面稳定超时，退出</string>
+    <string name="no_platform">寻找下一个跳台失败，退出</string>
+    <string name="press_failed">模拟点击失败，退出</string>
+    <string name="no_permission">助手缺少屏幕观察权限，请确认允许录像</string>
+    <string name="screen_record_failed">屏幕画面获取失败，退出</string>
+    <string name="already_steps">已跳 %d 步</string>
+    <string name="check_root">申请 root 权限</string>
+    <string name="check_floating_window">申请悬浮窗权限</string>
+    <string name="get_root_failed">获取 root 权限失败！助手将无法正常使用</string>
+</resources>
