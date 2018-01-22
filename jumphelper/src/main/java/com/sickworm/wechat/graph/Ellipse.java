@@ -9,8 +9,8 @@ public class Ellipse extends Graph {
     public float angle;
 
     public Ellipse(int centerX, int centerY, int width, int height, float angle) {
-        this.center = center;
-        this.size = size;
+        this.center = new Point(centerX, centerY);
+        this.size = new Size(width, height);
         this.angle = angle;
     }
 

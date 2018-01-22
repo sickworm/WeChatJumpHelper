@@ -4,7 +4,7 @@ include $(CLEAR_VARS)
 
 include ${LOCAL_PATH}/opencv/jni/OpenCV.mk
 
-LOCAL_SRC_FILES  := JumpCVJni.cpp JumpCV.cpp
+LOCAL_SRC_FILES  := JumpCVJni.cpp JumpCV.cpp Graph.cpp
 LOCAL_C_INCLUDES += $(LOCAL_PATH)
 LOCAL_LDLIBS     += -llog -ldl
 

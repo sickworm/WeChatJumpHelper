@@ -11,9 +11,11 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 
-import com.sickworm.wechat.graph.Ellipse;
-import com.sickworm.wechat.graph.Line;
-import com.sickworm.wechat.graph.Point;
+import com.sickworm.wechat.graph.Graph;
+import com.sickworm.wechat.jumphelper.JumpHelper;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 悬浮窗按钮
@@ -22,13 +24,13 @@ import com.sickworm.wechat.graph.Point;
  */
 @SuppressWarnings("FieldCanBeLocal")
 public class FloatingView extends FrameLayout {
-    private static final boolean OPEN_DEBUG_VIEW = true;
+    private static final boolean SHOW_DEBUG_VIEW = true;
     private static final int ALIGN_X_DP = 48;
     private static final int START_Y_DP = 180;
     private View mFloatingView;
-    private OverlayDebugView mOverlayDebugView;
-    private WindowManager.LayoutParams mParams;
-    private FloatingManager mFloatingManager;
+    private OverlayDebugView overlayDebugView;
+    private WindowManager.LayoutParams params;
+    private FloatingManager floatingManager;
     private int minXPx;
     private int startYPx;
 
@@ -41,63 +43,60 @@ public class FloatingView extends FrameLayout {
         mFloatingView.setOnClickListener(mOnClickListener);
         minXPx = (int) (ALIGN_X_DP * context.getResources().getDisplayMetrics().density);
         startYPx = (int) (START_Y_DP * context.getResources().getDisplayMetrics().density);
-        mOverlayDebugView = new OverlayDebugView(context);
+        overlayDebugView = new OverlayDebugView(context);
 
-        mFloatingManager = FloatingManager.getInstance(context);
+        floatingManager = FloatingManager.getInstance(context);
     }
 
     public void show() {
-        WindowManager.LayoutParams params = new WindowManager.LayoutParams();
-        params.gravity = Gravity.TOP | Gravity.START;
-        params.x = 0;
-        params.y = 0;
+        WindowManager.LayoutParams debugViewParams = new WindowManager.LayoutParams();
+        debugViewParams.gravity = Gravity.TOP | Gravity.START;
+        debugViewParams.x = 0;
+        debugViewParams.y = 0;
         //总是出现在应用程序窗口之上
-        params.type = WindowManager.LayoutParams.TYPE_SYSTEM_ALERT;
+        debugViewParams.type = WindowManager.LayoutParams.TYPE_SYSTEM_ALERT;
         //设置图片格式，效果为背景透明
-        params.format = PixelFormat.RGBA_8888;
-        params.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE |
+        debugViewParams.format = PixelFormat.RGBA_8888;
+        debugViewParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE |
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN | WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR;
-        params.width = LayoutParams.MATCH_PARENT;
-        params.height = LayoutParams.MATCH_PARENT;
-        if (OPEN_DEBUG_VIEW) {
-            mFloatingManager.addView(mOverlayDebugView, params);
+        debugViewParams.width = LayoutParams.MATCH_PARENT;
+        debugViewParams.height = LayoutParams.MATCH_PARENT;
+        if (SHOW_DEBUG_VIEW) {
+            floatingManager.addView(overlayDebugView, debugViewParams);
         }
 
-        mParams = new WindowManager.LayoutParams();
+        params = new WindowManager.LayoutParams();
 
-        mParams.gravity = Gravity.TOP | Gravity.START;
-        mParams.x = 0;
-        mParams.y = startYPx;
-        mParams.type = WindowManager.LayoutParams.TYPE_SYSTEM_ALERT;
-        mParams.format = PixelFormat.RGBA_8888;
-        mParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
+        params.gravity = Gravity.TOP | Gravity.START;
+        params.x = 0;
+        params.y = startYPx;
+        params.type = WindowManager.LayoutParams.TYPE_SYSTEM_ALERT;
+        params.format = PixelFormat.RGBA_8888;
+        params.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN | WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR;
-        mParams.width = LayoutParams.WRAP_CONTENT;
-        mParams.height = LayoutParams.WRAP_CONTENT;
-        mFloatingManager.addView(mFloatingView, mParams);
+        params.width = LayoutParams.WRAP_CONTENT;
+        params.height = LayoutParams.WRAP_CONTENT;
+        floatingManager.addView(mFloatingView, params);
+
+        if (BuildConfig.QUICK_TEST) {
+
+            JumpHelper.getInstance().start(getContext());
+        }
     }
 
     public void hide() {
-        mFloatingManager.removeView(mFloatingView);
-        if (OPEN_DEBUG_VIEW) {
-            mFloatingManager.removeView(mOverlayDebugView);
+        floatingManager.removeView(mFloatingView);
+        if (SHOW_DEBUG_VIEW) {
+            floatingManager.removeView(overlayDebugView);
         }
     }
 
-    public void addDebugLine(Line line) {
-        mOverlayDebugView.addLine(line);
-    }
-
-    public void addDebugEllipse(Ellipse ellipse) {
-        mOverlayDebugView.addEllipse(ellipse);
-    }
-
-    public void addDebugPoint(Point point) {
-        mOverlayDebugView.addPoint(point);
+    public void setDebugGraphs(List<Graph> graphs) {
+        overlayDebugView.setGraphs(graphs);
     }
 
     public void clearDebugGraphs() {
-        mOverlayDebugView.clearGraphs();
+        overlayDebugView.setGraphs(new ArrayList<Graph>());
     }
 
     private OnTouchListener mOnTouchListener = new OnTouchListener() {
@@ -112,17 +111,17 @@ public class FloatingView extends FrameLayout {
                     moved = false;
                     mTouchStartX = (int) event.getRawX();
                     mTouchStartY = (int) event.getRawY();
-                    mOriginX = mParams.x;
-                    mOriginY = mParams.y;
+                    mOriginX = params.x;
+                    mOriginY = params.y;
                     break;
                 case MotionEvent.ACTION_MOVE:
                     moved = true;
-                    mParams.x = mOriginX - mTouchStartX + (int) event.getRawX();
-                    mParams.y = mOriginY - mTouchStartY + (int) event.getRawY();
-                    if (mParams.x <= minXPx) {
-                        mParams.x = 0;
+                    params.x = mOriginX - mTouchStartX + (int) event.getRawX();
+                    params.y = mOriginY - mTouchStartY + (int) event.getRawY();
+                    if (params.x <= minXPx) {
+                        params.x = 0;
                     }
-                    mFloatingManager.updateView(mFloatingView, mParams);
+                    floatingManager.updateView(mFloatingView, params);
                     break;
                 case MotionEvent.ACTION_UP:
                     if (!moved) {

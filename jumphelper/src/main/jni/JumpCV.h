@@ -9,6 +9,8 @@
 
 #include <opencv2/opencv.hpp>
 
+#include "Graph.h"
+
 #define IN
 #define OUT
 #define IN_OUT
@@ -36,7 +38,7 @@ private:
     int g_height;
     float g_density;
 
-    std::vector<void *> g_debugGraphs;
+    std::vector<Graph *> g_debugGraphs;
 
     cv::Mat hsv;
     cv::Mat blu;
@@ -51,7 +53,7 @@ public:
     ~JumpCV();
     bool findChess(IN cv::Mat img, OUT cv::Point &chessPoint);
     bool findPlatform(IN cv::Mat img, OUT cv::Point &platformPoint);
-    std::vector<void *> getGraphs();
+    std::vector<Graph *> getGraphs();
     void clearGraphs();
 };
 

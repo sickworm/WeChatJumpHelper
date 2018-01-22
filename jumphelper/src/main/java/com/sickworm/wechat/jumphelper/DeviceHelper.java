@@ -2,20 +2,22 @@ package com.sickworm.wechat.jumphelper;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Resources;
+import android.graphics.Bitmap;
 import android.graphics.PixelFormat;
-import android.graphics.Point;
 import android.hardware.display.DisplayManager;
 import android.media.Image;
 import android.media.ImageReader;
 import android.media.projection.MediaProjection;
-import android.util.DisplayMetrics;
 import android.util.Size;
 
 import com.apkfuns.logutils.LogUtils;
+import com.sickworm.wechat.graph.Point;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
 /**
@@ -23,15 +25,16 @@ import java.util.Locale;
  *
  * Created by sickworm on 2017/12/30.
  */
-class DeviceHelper {
+public class DeviceHelper {
     private static DeviceHelper instance = null;
     private MediaProjection projection;
     private final Object lock = new Object();
     private boolean permissionGranted = false;
     private ImageReader imageReader;
-    private Image cache;
+    private Bitmap cache;
+    private ExecutorService signleExecutor = Executors.newSingleThreadExecutor();
 
-    static DeviceHelper getInstance() {
+    public static DeviceHelper getInstance() {
         if (instance == null) {
             synchronized (DeviceHelper.class) {
                 if (instance == null) {
@@ -57,6 +60,14 @@ class DeviceHelper {
                 screenSize.getWidth(), screenSize.getHeight(),
                 densityDpi, DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC,
                 imageReader.getSurface(), null, null);
+
+        // ImageReader 的截屏准备时间
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            LogUtils.e(e);
+            return false;
+        }
         return true;
     }
 
@@ -80,7 +91,7 @@ class DeviceHelper {
         return permissionGranted;
     }
 
-    Image getCurrentFrame() {
+    Bitmap getCurrentFrame() {
         if (imageReader == null) {
             return null;
         }
@@ -91,15 +102,30 @@ class DeviceHelper {
                 LogUtils.d("no new image");
                 return cache;
             }
-            cache = image;
-            return image;
+            cache = imageToBitmap(image);
+            image.close();
+            return cache;
         } catch (Exception e) {
             LogUtils.e("getCurrentFrame failed, e: " + e.getLocalizedMessage());
             return null;
         }
     }
 
-    boolean doPress(Point point, int pressTimeMill) {
+    private static Bitmap imageToBitmap(Image image) {
+        int width = image.getWidth();
+        int height = image.getHeight();
+        final Image.Plane[] planes = image.getPlanes();
+        final ByteBuffer buffer = planes[0].getBuffer();
+        int pixelStride = planes[0].getPixelStride();
+        int rowStride = planes[0].getRowStride();
+        int rowPadding = rowStride - pixelStride * width;
+        Bitmap bitmap = Bitmap.createBitmap(width + rowPadding / pixelStride, height, Bitmap.Config.RGB_565);
+        bitmap.copyPixelsFromBuffer(buffer);
+        return Bitmap.createBitmap(bitmap, 0, 0, width, height);
+    }
+
+    @SuppressWarnings({"WeakerAccess", "UnusedReturnValue"})
+    public boolean doPressSync(Point point, int pressTimeMill) {
         // TODO 改为 sendEvent 速度更快
         String command = String.format(Locale.CHINA, "su -c input swipe %d %d %d %d %d",
                 point.x, point.y, point.x, point.y, pressTimeMill);
@@ -115,6 +141,41 @@ class DeviceHelper {
             Thread.currentThread().interrupt();
             return true;
         }
+    }
+
+    public boolean doPressSync2(Point point, int pressTimeMill) {
+        String command = String.format(Locale.ENGLISH, "su -c " +
+                "sendevent /dev/input/event1 3 57 62 && " +
+                "sendevent /dev/input/event1 3 53 %d && " +
+                "sendevent /dev/input/event1 3 54 %d && " +
+                "sendevent /dev/input/event1 3 58 46 && " +
+                "sendevent /dev/input/event1 3 48 4 && " +
+                "sendevent /dev/input/event1 0 0 0 && " +
+                "usleep %d && " +
+                "sendevent /dev/input/event1 3 57 4294967295 && " +
+                "sendevent /dev/input/event1 0 0 0",
+                point.x, point.y, pressTimeMill * 1000);
+        try {
+            Process process = Runtime.getRuntime().exec(command);
+            process.waitFor();
+            return process.exitValue() == 0;
+        } catch (IOException e) {
+            LogUtils.e(e);
+            return false;
+        } catch (InterruptedException e) {
+            LogUtils.w(e);
+            Thread.currentThread().interrupt();
+            return true;
+        }
+    }
+
+    void doPressAsync(final Point point, final int pressTimeMill) {
+        signleExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                doPressSync(point, pressTimeMill);
+            }
+        });
     }
 
     void onResult(boolean granted, MediaProjection projection) {

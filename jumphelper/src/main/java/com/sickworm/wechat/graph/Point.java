@@ -21,6 +21,15 @@ public class Point extends Graph {
     }
 
     @Override
+    public boolean equals(Object obj) {
+        if (obj == null || !(obj instanceof Point)) {
+            return false;
+        }
+        Point point = (Point) obj;
+        return x == point.x && y == point.y;
+    }
+
+    @Override
     public void draw(Canvas canvas, Paint paint) {
         canvas.drawPoint(x, y, paint);
     }

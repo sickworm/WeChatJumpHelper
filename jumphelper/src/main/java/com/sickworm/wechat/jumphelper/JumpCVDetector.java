@@ -1,11 +1,11 @@
 package com.sickworm.wechat.jumphelper;
 
 import android.graphics.Bitmap;
-import android.graphics.Point;
 import android.media.Image;
 
 import com.apkfuns.logutils.LogUtils;
 import com.sickworm.wechat.graph.Graph;
+import com.sickworm.wechat.graph.Point;
 
 import org.opencv.android.Utils;
 import org.opencv.core.CvType;
@@ -46,6 +46,7 @@ class JumpCVDetector {
             return false;
         }
         if (newFrame == oldFrame) {
+            LogUtils.d("two frames are the same object");
             return true;
         }
 
@@ -100,26 +101,10 @@ class JumpCVDetector {
         return getDebugGraphs(nativeObj);
     }
 
-    static Mat imageToMat(Image image) {
-        int width = image.getWidth();
-        int height = image.getHeight();
-        final Image.Plane[] planes = image.getPlanes();
-        final ByteBuffer buffer = planes[0].getBuffer();
-        int pixelStride = planes[0].getPixelStride();
-        int rowStride = planes[0].getRowStride();
-        int rowPadding = rowStride - pixelStride * width;
-        Bitmap bitmap = Bitmap.createBitmap(width + rowPadding / pixelStride, height, Bitmap.Config.RGB_565);
-        bitmap.copyPixelsFromBuffer(buffer);
-        bitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height);
-        Mat mat = new Mat(width + rowPadding / pixelStride, height, CvType.CV_8UC1);
-        Utils.bitmapToMat(bitmap, mat, true);
-        return mat;
-    }
-
     private static native long newInstance(int width, int height, float density);
     private static native long deleteInstance(long instance);
     private static native Point findChess(long instance, long mat);
     private static native Point findPlatform(long instance, long mat);
-    private static native List<Graph> clearDebugGraphs(long instance);
+    private static native void clearDebugGraphs(long instance);
     private static native List<Graph> getDebugGraphs(long instance);
 }

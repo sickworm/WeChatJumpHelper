@@ -87,7 +87,7 @@ bool JumpCV::findChess(IN Mat img, OUT Point &chessPoint) {
     }
     chessPoint.x = ((leftCenterPoint.x + rightCenterPoint.x) / 2);
     chessPoint.y = ((leftCenterPoint.y + rightCenterPoint.y) / 2);
-    g_debugGraphs.push_back(new Point(chessPoint));
+    g_debugGraphs.push_back(new Graph(TYPE_POINT, new Point(chessPoint)));
     LOGI("findChess chess center.x=%d, center.y=%d", chessPoint.x, chessPoint.y);
     return true;
 }
@@ -148,10 +148,6 @@ bool JumpCV::findPlatformSquare(IN Mat img, OUT Point &platformPoint) {
     Vec4i lastLine = Vec4i(0, 0, 0, 0);
     for (int i = 0; i < lines.size(); i++) {
         Vec4i line = lines[i];
-        LOGD("%d %d %d",
-             abs(lastLine[1] - line[1]),
-             abs(lastLine[0] - line[0]),
-             abs(lastLine[2] - line[2]));
         if (abs(lastLine[0] - line[0]) < minLineHeadGap &&
             abs(lastLine[1] - line[1]) < minLineHeadGap &&
             abs(lastLine[2] - line[2]) > minLineTailDistance) {
@@ -189,11 +185,11 @@ bool JumpCV::findPlatformSquare(IN Mat img, OUT Point &platformPoint) {
         platformPoint.x = (line1[0] + line2[0]) / 2;
         platformPoint.y = (line1[1] + line1[1]) / 2;
     }
-    LOGI("findPlatformSquare center.x=%d, center.y=%d", platformPoint.x, platformPoint.y);
+    LOGI("findPlatformSquare center x=%d, y=%d", platformPoint.x, platformPoint.y);
     if (DEBUG_TYPE & (DEBUG_ALL_DEST | DEBUG_SQUARE)) {
-        g_debugGraphs.push_back(new Point(platformPoint));
-        g_debugGraphs.push_back(new Vec4i(foundLines[0]));
-        g_debugGraphs.push_back(new Vec4i(foundLines[1]));
+        g_debugGraphs.push_back(new Graph(TYPE_POINT, new Point(platformPoint)));
+        g_debugGraphs.push_back(new Graph(TYPE_LINE, new Vec4i(foundLines[0])));
+        g_debugGraphs.push_back(new Graph(TYPE_LINE, new Vec4i(foundLines[1])));
     }
     return true;
 }
@@ -204,6 +200,7 @@ bool JumpCV::findPlatformCircle(IN Mat img, OUT Point &platformPoint) {
     // TODO 适配屏幕
     int minArea = 10000;
     int maxArea = 400000;
+    int minHeight = 500;
 
     Canny(img, binary, threshold1, threshold2);
     vector<vector<Point> > contours;
@@ -220,6 +217,9 @@ bool JumpCV::findPlatformCircle(IN Mat img, OUT Point &platformPoint) {
             continue;
         }
         if (ellipse.angle < 80) {
+            continue;
+        }
+        if (ellipse.center.y < minHeight) {
             continue;
         }
         double area = PI * ellipse.size.height * ellipse.size.width;
@@ -247,9 +247,9 @@ bool JumpCV::findPlatformCircle(IN Mat img, OUT Point &platformPoint) {
     platformPoint.x = (int) (highestEllipse).center.x;
     platformPoint.y = (int) (highestEllipse).center.y;
     LOGI("findPlatformCircle center x=%d, y=%d", platformPoint.x, platformPoint.y);
-    if (DEBUG_TYPE & (DEBUG_ALL_DEST  | DEBUG_CIRCLE)) {
-        g_debugGraphs.push_back(new Point(platformPoint));
-        g_debugGraphs.push_back(new RotatedRect(highestEllipse));
+    if (DEBUG_TYPE & (DEBUG_ALL_DEST | DEBUG_CIRCLE)) {
+        g_debugGraphs.push_back(new Graph(TYPE_POINT, new Point(platformPoint)));
+        g_debugGraphs.push_back(new Graph(TYPE_ELLIPSE, new RotatedRect(highestEllipse)));
     }
     return true;
 }
@@ -257,10 +257,10 @@ bool JumpCV::findPlatformCircle(IN Mat img, OUT Point &platformPoint) {
 bool JumpCV::findWhitePoint(IN Mat img, OUT Point &whitePoint) {
     int h = 0;
     int s = 0;
-    int v = 244;
+    int v = 240;
     int h2 = 0;
     int s2 = 0;
-    int v2 = 245;
+    int v2 = 250;
     int pointMinArea = 2000;
     int pointMaxArea = 3000;
     float ellipseMinScale = 0.3f;
@@ -302,12 +302,12 @@ bool JumpCV::findWhitePoint(IN Mat img, OUT Point &whitePoint) {
         whitePoint.y = (int) ellipse.center.y;
         LOGI("white point x=%d, y=%d", whitePoint.x, whitePoint.y);
         if (DEBUG_TYPE & (DEBUG_ALL_DEST | DEBUG_WHITE_POINT)) {
-            g_debugGraphs.push_back(new Point(whitePoint));
+            g_debugGraphs.push_back(new Graph(TYPE_POINT, new Point(whitePoint)));
         }
         return true;
     }
 
-    LOGD("findWhitePoint not white point");
+    LOGD("findWhitePoint no white point");
     return false;
 }
 
@@ -353,7 +353,7 @@ bool JumpCV::findPlatform(IN cv::Mat img, OUT cv::Point &platformPoint) {
     return true;
 }
 
-vector<void *> JumpCV::getGraphs() {
+vector<Graph *> JumpCV::getGraphs() {
     return g_debugGraphs;
 }
 

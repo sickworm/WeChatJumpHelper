@@ -5,15 +5,13 @@ import android.os.Build;
 import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
 import com.apkfuns.logutils.LogUtils;
-import com.sickworm.wechat.jumphelper.JumpHelper;
-
-import java.io.IOException;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -23,12 +21,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Button mBtnShow = findViewById(R.id.btn_show);
-        Button mBtnHide = findViewById(R.id.btn_hide);
+        Button showButton = findViewById(R.id.btn_show);
+        Button hideButton = findViewById(R.id.btn_hide);
+        Button checkRootButton = findViewById(R.id.btn_check_root);
+        Button checkFloatingWindowButton = findViewById(R.id.btn_check_floating_window);
 
-        mBtnShow.setOnClickListener(this);
-        mBtnHide.setOnClickListener(this);
+        showButton.setOnClickListener(this);
+        hideButton.setOnClickListener(this);
+        checkRootButton.setOnClickListener(this);
+        checkFloatingWindowButton.setOnClickListener(this);
 
+        if (BuildConfig.QUICK_TEST) {
+            showButton.performClick();
+        }
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_UP:
+                LogUtils.i("UP %f %f", event.getRawX(), event.getRawY());
+                break;
+            case MotionEvent.ACTION_DOWN:
+                LogUtils.i("DOWN %f %f", event.getRawX(), event.getRawY());
+                break;
+            case MotionEvent.ACTION_MOVE:
+                LogUtils.i("MOVE %f %f", event.getRawX(), event.getRawY());
+                break;
+        }
+        return super.onTouchEvent(event);
     }
 
     @Override
@@ -37,11 +58,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (v.getId()) {
             case R.id.btn_show:
                 intent.putExtra(MyService.ACTION, MyService.SHOW);
+                startService(intent);
                 finish();
                 break;
             case R.id.btn_hide:
                 intent.putExtra(MyService.ACTION, MyService.HIDE);
+                startService(intent);
                 finish();
+                break;
             case R.id.btn_check_root:
                 if (!checkRoot()) {
                     toast(R.string.get_root_failed);
@@ -58,7 +82,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             default:
                 break;
         }
-        startService(intent);
     }
 
     private boolean checkRoot() {

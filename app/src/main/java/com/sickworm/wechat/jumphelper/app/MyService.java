@@ -2,14 +2,14 @@ package com.sickworm.wechat.jumphelper.app;
 
 import android.app.Service;
 import android.content.Intent;
-import android.graphics.Point;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.widget.Toast;
 
 import com.apkfuns.logutils.LogUtils;
-import com.sickworm.wechat.graph.Line;
+import com.sickworm.wechat.graph.Point;
+import com.sickworm.wechat.jumphelper.JumpError;
 import com.sickworm.wechat.jumphelper.JumpHelper;
 
 /**
@@ -23,7 +23,8 @@ public class MyService extends Service {
     public static final String ACTION="action";
     public static final String SHOW = "show";
     public static final String HIDE = "hide";
-    private FloatingView mFloatingView;
+    private FloatingView floatingView;
+    private JumpHelper jumpHelper;
 
     static {
         LogUtils.getLogConfig().configShowBorders(false);
@@ -32,8 +33,9 @@ public class MyService extends Service {
     @Override
     public void onCreate(){
         super.onCreate();
-        mFloatingView = new FloatingView(this);
-        JumpHelper.getInstance().setOnStatusChangedListener(listener);
+        floatingView = new FloatingView(this);
+        jumpHelper = JumpHelper.getInstance();
+        jumpHelper.setOnStatusChangedListener(listener);
     }
 
     @Override
@@ -44,13 +46,16 @@ public class MyService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null) {
-            String action=intent.getStringExtra(ACTION);
+            String action = intent.getStringExtra(ACTION);
+            if (action == null) {
+                return super.onStartCommand(intent, flags, startId);
+            }
             switch (action) {
                 case SHOW:
-                    mFloatingView.show();
+                    floatingView.show();
                     break;
                 case HIDE:
-                    mFloatingView.hide();
+                    floatingView.hide();
                     break;
                 default:
                     break;
@@ -68,6 +73,7 @@ public class MyService extends Service {
 
         @Override
         public void onStep(Point from, Point to, double pressTime) {
+            floatingView.setDebugGraphs(jumpHelper.getDebugGraphs());
             count++;
             if (count % 10 == 0) {
                 toast(String.format(getString(R.string.already_steps), count));
@@ -75,7 +81,7 @@ public class MyService extends Service {
         }
 
         @Override
-        public void onError(JumpHelper.Error error) {
+        public void onError(JumpError error) {
             switch (error) {
                 case NO_CHESS:
                     toast(R.string.no_chess);
@@ -96,6 +102,7 @@ public class MyService extends Service {
                     toast(R.string.screen_record_failed);
                     break;
             }
+            floatingView.clearDebugGraphs();
         }
 
         @Override

@@ -17,6 +17,17 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    flavorDimensions 'default'
+
+    productFlavors {
+        normal {
+            buildConfigField 'boolean', 'QUICK_TEST', 'false'
+        }
+        quickTest {
+            buildConfigField 'boolean', 'QUICK_TEST', 'true'
+        }
+    }
 }
 
 dependencies {

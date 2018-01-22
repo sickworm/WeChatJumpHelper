@@ -1,0 +1,1 @@
+#include "Graph.h"Graph::Graph(int type, void *object) {    this->type = type;    this->objecct = object;}
