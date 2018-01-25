@@ -20,11 +20,12 @@ jlong FUN(newInstance)(JNIEnv */*env*/, jobject /*thiz*/, jint width, jint heigh
     return (jlong) new JumpCV(width, height, density);
 }
 
-jlong FUN(deleteInstance)(JNIEnv */*env*/, jobject /*thiz*/, jlong instance) {
-    delete((JumpCV *)instance);
+void FUN(deleteInstance)(JNIEnv */*env*/, jobject /*thiz*/, jlong instance) {
+    JumpCV *jumpCV = (JumpCV *)instance;
+    delete(jumpCV);
 }
 
-jobject FUN(findChess)(JNIEnv* env, jobject /*thiz*/, jlong instance, jlong mat) {
+jobject FUN(findChess)(JNIEnv *env, jobject /*thiz*/, jlong instance, jlong mat) {
     cv::Point point;
     cv::Mat img = *(cv::Mat *) mat;
     JumpCV *jumpCV = (JumpCV *) instance;
@@ -34,7 +35,7 @@ jobject FUN(findChess)(JNIEnv* env, jobject /*thiz*/, jlong instance, jlong mat)
     return NULL;
 }
 
-jobject FUN(findPlatform)(JNIEnv* env, jobject /*thiz*/, jlong instance, jlong mat) {
+jobject FUN(findPlatform)(JNIEnv *env, jobject /*thiz*/, jlong instance, jlong mat) {
     cv::Point point;
     cv::Mat img = *(cv::Mat *)mat;
     JumpCV *jumpCV = (JumpCV *)instance;

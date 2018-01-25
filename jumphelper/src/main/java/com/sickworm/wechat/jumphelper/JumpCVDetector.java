@@ -1,17 +1,11 @@
 package com.sickworm.wechat.jumphelper;
 
-import android.graphics.Bitmap;
-import android.media.Image;
-
 import com.apkfuns.logutils.LogUtils;
 import com.sickworm.wechat.graph.Graph;
 import com.sickworm.wechat.graph.Point;
 
-import org.opencv.android.Utils;
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 
-import java.nio.ByteBuffer;
 import java.util.List;
 
 
@@ -21,8 +15,12 @@ import java.util.List;
  *
  * Created by sickworm on 2017/12/30.
  */
+@SuppressWarnings("WeakerAccess")
 class JumpCVDetector {
     private long nativeObj;
+    private Mat lastFrame = null;
+    private Point lastChessPosition = null;
+    private Point lastPlatformPosition = null;
 
     static {
         System.loadLibrary("opencv_java3");
@@ -36,6 +34,7 @@ class JumpCVDetector {
     @Override
     protected void finalize() {
         deleteInstance(nativeObj);
+        nativeObj = 0;
     }
 
     /**
@@ -50,18 +49,38 @@ class JumpCVDetector {
             return true;
         }
 
-        Point newPosition = getChessPosition(newFrame);
-        Point oldPosition = getChessPosition(oldFrame);
-        if (newPosition != null && newPosition.equals(oldPosition)) {
+        Point newChessPosition = getChessPosition(newFrame);
+        if (newChessPosition == null) {
+            return false;
+        }
+        LogUtils.i("new chess point (%d, %d)", newChessPosition.x, newChessPosition.y);
+        Point oldChessPosition = lastFrame == oldFrame? lastChessPosition : getChessPosition(oldFrame);
+        lastChessPosition = newChessPosition;
+        if (newChessPosition.equals(oldChessPosition)) {
             LogUtils.i("chess is stabled");
-            newPosition = getNextPlatformPosition(newFrame);
-            oldPosition = getNextPlatformPosition(oldFrame);
-            if (newPosition != null && newPosition.equals(oldPosition)) {
+            Point newPlatformPosition = getNextPlatformPosition(newFrame);
+            if (newPlatformPosition == null) {
+                return false;
+            }
+            LogUtils.i("new platform point (%d, %d)", newPlatformPosition.x, newPlatformPosition.y);
+            Point oldPlatformPosition = lastFrame == oldFrame? lastPlatformPosition : getChessPosition(oldFrame);
+            lastPlatformPosition = newPlatformPosition;
+            if (newPlatformPosition.equals(oldPlatformPosition)) {
                 LogUtils.i("chess and platform are stabled");
+                lastFrame = newFrame;
                 return true;
             }
         }
+        lastFrame = newFrame;
         return false;
+    }
+
+    Point getLastChessPosition() {
+        return lastChessPosition;
+    }
+
+    Point getLastPlatformPosition() {
+        return lastPlatformPosition;
     }
 
     /**

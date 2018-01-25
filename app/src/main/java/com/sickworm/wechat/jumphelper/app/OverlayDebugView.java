@@ -49,13 +49,15 @@ public class OverlayDebugView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        for (Graph g : graphs) {
-            g.draw(canvas, paint);
+        if (graphs != null) {
+            for (Graph g : graphs) {
+                g.draw(canvas, paint);
+            }
         }
     }
 
     void setGraphs(List<Graph> graphs) {
-        this.graphs = new ArrayList<>(graphs);
+        this.graphs = graphs;
         MAIN_HANDLER.post(new Runnable() {
             @Override
             public void run() {

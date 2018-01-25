@@ -23,7 +23,7 @@ import java.util.List;
  * Created by sickworm on 2017/12/30.
  */
 class JumpController {
-    private static final int STABLE_MAX_WAIT_MILL = 5000;
+    private static final int STABLE_MAX_WAIT_MILL = 3000;
     private static final int STABLE_WAIT_DURATION = 100;
     private static final int STABLE_WAIT_COUNT = STABLE_MAX_WAIT_MILL / STABLE_WAIT_DURATION;
     private static final int MIN_JUMP_TIME_MILL = 10;
@@ -42,10 +42,6 @@ class JumpController {
     private DisplayMetrics metrics;
     private DeviceHelper deviceHelper;
     private Context context;
-
-    static {
-        LogUtils.getLogConfig().configShowBorders(false);
-    }
 
     JumpController(Context context, double correctionValue) {
         this.context = context.getApplicationContext();
@@ -68,7 +64,7 @@ class JumpController {
 
     Result next() {
         int count = STABLE_WAIT_COUNT;
-        Mat currentFrame = null;
+        Mat currentFrame;
         Mat lastFrame = null;
         while (count-- > 0) {
             Bitmap currentFrameBitmap = deviceHelper.getCurrentFrame();
@@ -80,6 +76,8 @@ class JumpController {
             if (STORE_FRAME) {
                 saveMat(currentFrame);
             }
+
+            jumpCVDetector.clearDebugGraphs();
             if (jumpCVDetector.isScreenStabled(currentFrame, lastFrame)) {
                 break;
             }
@@ -90,24 +88,26 @@ class JumpController {
                 return new Result(JumpError.INTERRUPTED);
             }
         }
-        if (count < 0) {
-            return new Result(JumpError.NOT_STABLE);
-        }
 
-        jumpCVDetector.clearDebugGraphs();
-        Point chessPoint = jumpCVDetector.getChessPosition(currentFrame);
+        Point chessPoint = jumpCVDetector.getLastChessPosition();
         if (chessPoint == null) {
             return new Result(JumpError.NO_CHESS);
         }
 
-        Point platformPoint = jumpCVDetector.getNextPlatformPosition(currentFrame);
+        Point platformPoint = jumpCVDetector.getLastPlatformPosition();
         if (platformPoint == null) {
             return new Result(JumpError.NO_PLATFORM);
+        }
+
+        if (count < 0) {
+            return new Result(JumpError.NOT_STABLE);
         }
 
         double distance = jumpCVDetector.calculateDistanceDp(chessPoint, platformPoint, metrics.density);
         int pressTimeMill = (int) (distance * DEFAULT_SCALE * correctionValue + MIN_JUMP_TIME_MILL);
 
+        LogUtils.i("jump from (%d, %d) to (%d, %d) for %d mill",
+                chessPoint.x, chessPoint.y, platformPoint.x, platformPoint.y, pressTimeMill);
         deviceHelper.doPressAsync(chessPoint, pressTimeMill);
 
         return new Result(chessPoint, platformPoint, pressTimeMill);
@@ -152,7 +152,7 @@ class JumpController {
         }
         try {
             FileOutputStream out = new FileOutputStream(f);
-            bitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
             out.flush();
             out.close();
             LogUtils.i("save bitmap succeed");

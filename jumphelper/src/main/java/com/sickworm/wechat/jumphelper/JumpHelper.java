@@ -2,6 +2,7 @@ package com.sickworm.wechat.jumphelper;
 
 import android.content.Context;
 
+import com.apkfuns.logutils.LogUtils;
 import com.sickworm.wechat.graph.Graph;
 import com.sickworm.wechat.graph.Point;
 
@@ -21,6 +22,10 @@ public class JumpHelper {
     private double correctionValue;
     private Thread jumpControllerThread;
     private OnStateChangedListener listener;
+
+    static {
+        LogUtils.getLogConfig().configShowBorders(false);
+    }
 
     public static JumpHelper getInstance() {
         if (instance == null) {
@@ -55,6 +60,9 @@ public class JumpHelper {
                 }
                 loop:
                 while (!isInterrupted()) {
+                    if (listener != null) {
+                        listener.onStepStart();
+                    }
                     JumpController.Result result = jumpController.next();
                     switch (result.error) {
                         case OK:
@@ -69,6 +77,7 @@ public class JumpHelper {
                             break;
                         case INTERRUPTED:
                             interrupt();
+                            break;
                         case NO_CHESS:
                             onError(JumpError.NO_CHESS);
                             break loop;
@@ -129,6 +138,7 @@ public class JumpHelper {
 
     public interface OnStateChangedListener {
         void onStart();
+        void onStepStart();
         void onStep(Point from, Point to, double pressTime);
         void onError(JumpError error);
         void onStop();

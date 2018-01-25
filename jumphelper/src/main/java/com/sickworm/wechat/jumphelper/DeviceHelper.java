@@ -8,6 +8,7 @@ import android.hardware.display.DisplayManager;
 import android.media.Image;
 import android.media.ImageReader;
 import android.media.projection.MediaProjection;
+import android.os.Build;
 import android.util.Size;
 
 import com.apkfuns.logutils.LogUtils;
@@ -32,7 +33,7 @@ public class DeviceHelper {
     private boolean permissionGranted = false;
     private ImageReader imageReader;
     private Bitmap cache;
-    private ExecutorService signleExecutor = Executors.newSingleThreadExecutor();
+    private ExecutorService singleExecutor = Executors.newSingleThreadExecutor();
 
     public static DeviceHelper getInstance() {
         if (instance == null) {
@@ -124,14 +125,15 @@ public class DeviceHelper {
         return Bitmap.createBitmap(bitmap, 0, 0, width, height);
     }
 
-    @SuppressWarnings({"WeakerAccess", "UnusedReturnValue"})
-    public boolean doPressSync(Point point, int pressTimeMill) {
-        // TODO 改为 sendEvent 速度更快
+    @SuppressWarnings("UnusedReturnValue")
+    private boolean doPressSyncUsingInput(Point point, int pressTimeMill) {
         String command = String.format(Locale.CHINA, "su -c input swipe %d %d %d %d %d",
                 point.x, point.y, point.x, point.y, pressTimeMill);
         try {
+            LogUtils.d("start jump");
             Process process = Runtime.getRuntime().exec(command);
             process.waitFor();
+            LogUtils.d("stop jump");
             return process.exitValue() == 0;
         } catch (IOException e) {
             LogUtils.e(e);
@@ -143,7 +145,12 @@ public class DeviceHelper {
         }
     }
 
-    public boolean doPressSync2(Point point, int pressTimeMill) {
+    /**
+     * sendEvent 发送触摸事件，速度更快，但兼容性不足，目前仅兼容了 Nexus 5
+     * TODO 根据getEvent数据支持自动匹配
+     */
+    @SuppressWarnings("UnusedReturnValue")
+    private boolean doPressSyncUsingSendEvent(Point point, int pressTimeMill) {
         String command = String.format(Locale.ENGLISH, "su -c " +
                 "sendevent /dev/input/event1 3 57 62 && " +
                 "sendevent /dev/input/event1 3 53 %d && " +
@@ -156,8 +163,10 @@ public class DeviceHelper {
                 "sendevent /dev/input/event1 0 0 0",
                 point.x, point.y, pressTimeMill * 1000);
         try {
+            LogUtils.d("start jump");
             Process process = Runtime.getRuntime().exec(command);
             process.waitFor();
+            LogUtils.d("stop jump");
             return process.exitValue() == 0;
         } catch (IOException e) {
             LogUtils.e(e);
@@ -170,10 +179,14 @@ public class DeviceHelper {
     }
 
     void doPressAsync(final Point point, final int pressTimeMill) {
-        signleExecutor.execute(new Runnable() {
+        singleExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                doPressSync(point, pressTimeMill);
+                if (Build.MODEL.contains("HammerHeadaaaa")) {
+                    doPressSyncUsingSendEvent(point, pressTimeMill);
+                } else {
+                    doPressSyncUsingInput(point, pressTimeMill);
+                }
             }
         });
     }

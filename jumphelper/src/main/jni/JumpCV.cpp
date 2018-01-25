@@ -64,7 +64,7 @@ bool JumpCV::findChess(IN Mat img, OUT Point &chessPoint) {
         }
     }
     if (chessArea == 0) {
-        LOGW("findChess find chess contours failed");
+        LOGW("findChess no chess");
         return false;
     }
 
@@ -197,10 +197,13 @@ bool JumpCV::findPlatformSquare(IN Mat img, OUT Point &platformPoint) {
 bool JumpCV::findPlatformCircle(IN Mat img, OUT Point &platformPoint) {
     int threshold1 = 20;
     int threshold2 = 35;
+    int minAngle = 80;
+    int maxAngle = 100;
     // TODO 适配屏幕
     int minArea = 10000;
     int maxArea = 400000;
     int minHeight = 500;
+    int minEdgeX = 100;
 
     Canny(img, binary, threshold1, threshold2);
     vector<vector<Point> > contours;
@@ -213,13 +216,21 @@ bool JumpCV::findPlatformCircle(IN Mat img, OUT Point &platformPoint) {
             continue;
         }
         RotatedRect ellipse = fitEllipse(contour);
+        // 椭圆不能过扁
         if (ellipse.size.width / ellipse.size.height < 0.5) {
             continue;
         }
-        if (ellipse.angle < 80) {
+        // 椭圆是横着的
+        if (ellipse.angle < minAngle || ellipse.angle > maxAngle) {
             continue;
         }
+        // 排除界面上方的按钮
         if (ellipse.center.y < minHeight) {
+            continue;
+        }
+        // 排除掉边缘的悬浮窗按钮
+        if ((ellipse.center.x - ellipse.size.width / 2 < minEdgeX) ||
+                (ellipse.center.x + ellipse.size.width / 2 > img.cols - minEdgeX)) {
             continue;
         }
         double area = PI * ellipse.size.height * ellipse.size.width;
@@ -302,12 +313,13 @@ bool JumpCV::findWhitePoint(IN Mat img, OUT Point &whitePoint) {
         whitePoint.y = (int) ellipse.center.y;
         LOGI("white point x=%d, y=%d", whitePoint.x, whitePoint.y);
         if (DEBUG_TYPE & (DEBUG_ALL_DEST | DEBUG_WHITE_POINT)) {
+
             g_debugGraphs.push_back(new Graph(TYPE_POINT, new Point(whitePoint)));
         }
         return true;
     }
 
-    LOGD("findWhitePoint no white point");
+    LOGI("findWhitePoint no white point");
     return false;
 }
 

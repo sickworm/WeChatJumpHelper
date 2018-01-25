@@ -31,7 +31,7 @@ public class MyService extends Service {
     }
 
     @Override
-    public void onCreate(){
+    public void onCreate() {
         super.onCreate();
         floatingView = new FloatingView(this);
         jumpHelper = JumpHelper.getInstance();
@@ -65,17 +65,22 @@ public class MyService extends Service {
     }
 
     private JumpHelper.OnStateChangedListener listener = new JumpHelper.OnStateChangedListener() {
-        private int count = 0;
+        private int count = 1;
         @Override
         public void onStart() {
             toast(R.string.jump_begin);
         }
 
         @Override
+        public void onStepStart() {
+            LogUtils.i("step " + count);
+            floatingView.setDebugGraphs(null);
+        }
+
+        @Override
         public void onStep(Point from, Point to, double pressTime) {
             floatingView.setDebugGraphs(jumpHelper.getDebugGraphs());
-            count++;
-            if (count % 10 == 0) {
+            if (count++ % 10 == 0) {
                 toast(String.format(getString(R.string.already_steps), count));
             }
         }
