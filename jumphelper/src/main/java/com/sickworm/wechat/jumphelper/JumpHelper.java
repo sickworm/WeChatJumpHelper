@@ -70,7 +70,7 @@ public class JumpHelper {
                                 listener.onStep(result.fromPoint, result.toPoint, result.pressTimeMill);
                             }
                             try {
-                                sleep(STEP_DURATION_MILL);
+                                sleep(result.pressTimeMill + STEP_DURATION_MILL);
                             } catch (InterruptedException ignore) {
                                 interrupt();
                             }

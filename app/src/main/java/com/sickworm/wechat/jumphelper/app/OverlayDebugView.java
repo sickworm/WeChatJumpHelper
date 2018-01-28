@@ -10,6 +10,7 @@ import android.util.AttributeSet;
 import android.view.View;
 
 import com.sickworm.wechat.graph.Graph;
+import com.sickworm.wechat.graph.Point;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +23,6 @@ import java.util.List;
 
 public class OverlayDebugView extends View {
     private static final Handler MAIN_HANDLER = new Handler(Looper.getMainLooper());
-    private Paint paint = new Paint();
     private List<Graph> graphs = new ArrayList<>();
 
     public OverlayDebugView(Context context) {
@@ -41,9 +41,6 @@ public class OverlayDebugView extends View {
     }
 
     private void init() {
-        paint.setColor(getResources().getColor(R.color.red));
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(getResources().getDimension(R.dimen.paint_width));
     }
 
     @Override
@@ -51,7 +48,7 @@ public class OverlayDebugView extends View {
         super.onDraw(canvas);
         if (graphs != null) {
             for (Graph g : graphs) {
-                g.draw(canvas, paint);
+                g.draw(canvas);
             }
         }
     }

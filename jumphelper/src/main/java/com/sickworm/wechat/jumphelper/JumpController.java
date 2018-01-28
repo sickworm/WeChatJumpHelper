@@ -30,13 +30,17 @@ class JumpController {
     private static final boolean STORE_FRAME = false;
 
     /**
-     * 距离 dp 转换为按压时间 s 的系数
+     * 距离 dp 转换为按压时间 s 的系数1
      */
-    private static final double DEFAULT_SCALE = 1.38 * 3;
+    private static final double DEFAULT_SCALE = 4.14;
+    /**
+     * 距离 dp 转换为按压时间 s 的系数2
+     */
+    private static final double DEFAULT_SCALE2 = 120000;
 
     private JumpCVDetector jumpCVDetector;
     /**
-     * 外部 距离——按压时间 偏差修正
+     * 外部调节用，距离—>按压时间 系数的偏差修正
      */
     private double correctionValue;
     private DisplayMetrics metrics;
@@ -104,7 +108,9 @@ class JumpController {
         }
 
         double distance = jumpCVDetector.calculateDistanceDp(chessPoint, platformPoint, metrics.density);
-        int pressTimeMill = (int) (distance * DEFAULT_SCALE * correctionValue + MIN_JUMP_TIME_MILL);
+        int pressTimeMill = (int) (distance * DEFAULT_SCALE * correctionValue
+                - distance * distance / DEFAULT_SCALE2
+                + MIN_JUMP_TIME_MILL);
 
         LogUtils.i("jump from (%d, %d) to (%d, %d) for %d mill",
                 chessPoint.x, chessPoint.y, platformPoint.x, platformPoint.y, pressTimeMill);

@@ -4,6 +4,16 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 
 public class Line extends Graph {
+    private static final Paint DEFAULT_PAINT;
+
+    static {
+        DEFAULT_PAINT = new Paint();
+        DEFAULT_PAINT.setColor(0xFFFF0000);
+        DEFAULT_PAINT.setStyle(Paint.Style.STROKE);
+        DEFAULT_PAINT.setStrokeCap(Paint.Cap.ROUND);
+        DEFAULT_PAINT.setStrokeWidth(8);
+    }
+
     public Point start;
     public Point end;
 
@@ -13,7 +23,7 @@ public class Line extends Graph {
     }
 
     @Override
-    public void draw(Canvas canvas, Paint paint) {
-        canvas.drawLine(start.x, start.y, end.x, end.y, paint);
+    public void draw(Canvas canvas) {
+        canvas.drawLine(start.x, start.y, end.x, end.y, DEFAULT_PAINT);
     }
 }

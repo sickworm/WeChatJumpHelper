@@ -4,6 +4,16 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 
 public class Point extends Graph {
+    private static final Paint DEFAULT_PAINT;
+
+    static {
+        DEFAULT_PAINT = new Paint();
+        DEFAULT_PAINT.setColor(0xFFFF0000);
+        DEFAULT_PAINT.setStyle(Paint.Style.STROKE);
+        DEFAULT_PAINT.setStrokeCap(Paint.Cap.ROUND);
+        DEFAULT_PAINT.setStrokeWidth(16);
+    }
+
     public int x;
     public int y;
     /**
@@ -18,6 +28,7 @@ public class Point extends Graph {
     public Point(int x, int y, int type) {
         this.x = x;
         this.y = y;
+        this.type = type;
     }
 
     @Override
@@ -30,7 +41,7 @@ public class Point extends Graph {
     }
 
     @Override
-    public void draw(Canvas canvas, Paint paint) {
-        canvas.drawPoint(x, y, paint);
+    public void draw(Canvas canvas) {
+        canvas.drawPoint(x, y, DEFAULT_PAINT);
     }
 }

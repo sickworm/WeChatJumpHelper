@@ -69,10 +69,12 @@ jobject FUN(getDebugGraphs)(JNIEnv *env, jobject /*thiz*/, jlong instance) {
             cv::Point *p = (cv::Point *)graph->objecct;
             jobject point = env->NewObject(pointClass, pointMethod, p->x, p->y);
             env->CallBooleanMethod(list, addMethod, point);
+            env->DeleteLocalRef(point);
         } else if (graph->type == TYPE_LINE) {
             cv::Vec4i *p = (cv::Vec4i *)graph->objecct;
             jobject line = env->NewObject(lineClass, lineMethod, (*p)[0], (*p)[1], (*p)[2], (*p)[3]);
             env->CallBooleanMethod(list, addMethod, line);
+            env->DeleteLocalRef(line);
         } else if (graph->type == TYPE_ELLIPSE) {
             cv::RotatedRect *p = (cv::RotatedRect *)graph->objecct;
             jobject ellipse = env->NewObject(ellipseClass, ellipseMethod,
@@ -80,6 +82,7 @@ jobject FUN(getDebugGraphs)(JNIEnv *env, jobject /*thiz*/, jlong instance) {
                                              (int) p->size.width, (int) p->size.height,
                                              p->angle);
             env->CallBooleanMethod(list, addMethod, ellipse);
+            env->DeleteLocalRef(ellipse);
         }
     }
     return list;

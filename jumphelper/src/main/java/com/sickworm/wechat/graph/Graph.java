@@ -9,5 +9,6 @@ import android.graphics.Paint;
  * Created by wang on 2018/1/14.
  */
 public abstract class Graph {
-    public abstract void draw(Canvas canvas, Paint paint);
+
+    public abstract void draw(Canvas canvas);
 }

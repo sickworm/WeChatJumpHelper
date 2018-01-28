@@ -8,7 +8,9 @@
 #include <algorithm>
 
 #pragma clang diagnostic push
+#pragma ide diagnostic ignored "OCDFAInspection"
 #pragma ide diagnostic ignored "UnusedValue"
+
 #define PI 3.1415926
 
 using namespace std;
@@ -114,8 +116,9 @@ bool JumpCV::findPlatformSquare(IN Mat img, OUT Point &platformPoint) {
     int maxLineGap = 10;
     int rho = 10;
     int theta = 180;
+    // TODO 屏幕适配
     int minLineHeadGap = 10;
-    int minLineTailDistance = 100;
+    int minLineTailDistance = 50;
     int standardAngle = 130;
     int angleDeviation = 20;
     int threshold = 50;
@@ -130,15 +133,14 @@ bool JumpCV::findPlatformSquare(IN Mat img, OUT Point &platformPoint) {
 
     // 直线从上到下排序
     for (int i = 0; i < lines.size(); i++) {
-        Vec4i line = lines[i];
-        if (line[1] < line[3]) {
+        if (lines[i][1] > lines[i][3]) {
             int t;
-            t = line[0];
-            line[0] = line[2];
-            line[2] = t;
-            t = line[1];
-            line[1] = line[3];
-            line[3] = t;
+            t = lines[i][0];
+            lines[i][0] = lines[i][2];
+            lines[i][2] = t;
+            t = lines[i][1];
+            lines[i][1] = lines[i][3];
+            lines[i][3] = t;
         }
     }
     sort(lines.begin(), lines.end(), cmp);
@@ -148,27 +150,32 @@ bool JumpCV::findPlatformSquare(IN Mat img, OUT Point &platformPoint) {
     Vec4i lastLine = Vec4i(0, 0, 0, 0);
     for (int i = 0; i < lines.size(); i++) {
         Vec4i line = lines[i];
-        if (abs(lastLine[0] - line[0]) < minLineHeadGap &&
-            abs(lastLine[1] - line[1]) < minLineHeadGap &&
-            abs(lastLine[2] - line[2]) > minLineTailDistance) {
-            if ((line[2] - line[0] == 0) || (lastLine[2] - line[0] == 0)) {
-                continue;
-            }
-            Point linesNode;
-            linesNode.x = (lastLine[0] + line[0]) / 2;
-            linesNode.y = (lastLine[1] + line[1]) / 2;
-            int degree = getAngle(linesNode,
-                Point(lastLine[2], lastLine[3]), Point(line[2], line[3]));
-            LOGD("findPlatformSquare found node of lines with degree %d", degree);
-            if ((degree < standardAngle - angleDeviation) ||
-                (degree > standardAngle + angleDeviation)) {
-                continue;
-            }
-            foundLines.push_back(lastLine);
-            foundLines.push_back(line);
-            break;
+        if (abs(lastLine[0] - line[0]) > minLineHeadGap ||
+            abs(lastLine[1] - line[1]) > minLineHeadGap ||
+            abs(lastLine[2] - line[2]) < minLineTailDistance) {
+            lastLine = line;
+            continue;
         }
-        lastLine = line;
+        if (DEBUG_TYPE & DEBUG_SQUARE) {
+            g_debugGraphs.push_back(new Graph(TYPE_LINE, new Vec4i(line)));
+        }
+        if ((line[2] - line[0] == 0) || (lastLine[2] - line[0] == 0)) {
+            continue;
+        }
+        Point linesNode;
+        linesNode.x = (lastLine[0] + line[0]) / 2;
+        linesNode.y = (lastLine[1] + line[1]) / 2;
+        int degree = getAngle(linesNode,
+            Point(lastLine[2], lastLine[3]), Point(line[2], line[3]));
+        LOGD("findPlatformSquare found node of lines with degree %d", degree);
+        if ((degree < standardAngle - angleDeviation) ||
+            (degree > standardAngle + angleDeviation)) {
+            lastLine = line;
+            continue;
+        }
+        foundLines.push_back(lastLine);
+        foundLines.push_back(line);
+        break;
     }
     if (foundLines.size() == 0) {
         LOGI("findPlatformSquare found line failed");
@@ -178,12 +185,12 @@ bool JumpCV::findPlatformSquare(IN Mat img, OUT Point &platformPoint) {
     // 计算中点
     Vec4i line1 = foundLines[0];
     Vec4i line2 = foundLines[1];
-    if (abs(line1[0] - line2[0]) < 2) {
+    if (abs(line1[0] - line2[0]) < minLineHeadGap) {
         platformPoint.x = (line1[2] + line2[2]) / 2;
         platformPoint.y = (line1[3] + line2[3]) / 2;
     } else {
         platformPoint.x = (line1[0] + line2[0]) / 2;
-        platformPoint.y = (line1[1] + line1[1]) / 2;
+        platformPoint.y = (line1[1] + line2[1]) / 2;
     }
     LOGI("findPlatformSquare center x=%d, y=%d", platformPoint.x, platformPoint.y);
     if (DEBUG_TYPE & (DEBUG_ALL_DEST | DEBUG_SQUARE)) {
@@ -269,13 +276,14 @@ bool JumpCV::findWhitePoint(IN Mat img, OUT Point &whitePoint) {
     int h = 0;
     int s = 0;
     int v = 240;
-    int h2 = 0;
-    int s2 = 0;
+    int h2 = 360;
+    int s2 = 10;
     int v2 = 250;
-    int pointMinArea = 2000;
-    int pointMaxArea = 3000;
     float ellipseMinScale = 0.3f;
     float ellipseMinAngle = 80;
+    // TODO 屏幕适配
+    int pointMinArea = 2000;
+    int pointMaxArea = 3000;
 
     // 过滤颜色
     cvtColor(img, hsv, COLOR_RGB2HSV);
@@ -294,10 +302,13 @@ bool JumpCV::findWhitePoint(IN Mat img, OUT Point &whitePoint) {
     // 找白点，要求为横椭圆，面积 pointMinArea ~ pointMaxArea
     for (int i = 0; i < contours.size(); i++) {
         vector<Point> contour = contours[i];
-        if (contour.size() < 10) {
+        if (contour.size() < 5) {
             continue;
         }
         RotatedRect ellipse = fitEllipse(contour);
+        if (DEBUG_TYPE & DEBUG_WHITE_POINT) {
+            g_debugGraphs.push_back(new Graph(TYPE_ELLIPSE, new RotatedRect(ellipse)));
+        }
         // 长宽比
         if (ellipse.size.width / ellipse.size.height < ellipseMinScale) {
             continue;
@@ -313,8 +324,8 @@ bool JumpCV::findWhitePoint(IN Mat img, OUT Point &whitePoint) {
         whitePoint.y = (int) ellipse.center.y;
         LOGI("white point x=%d, y=%d", whitePoint.x, whitePoint.y);
         if (DEBUG_TYPE & (DEBUG_ALL_DEST | DEBUG_WHITE_POINT)) {
-
             g_debugGraphs.push_back(new Graph(TYPE_POINT, new Point(whitePoint)));
+            g_debugGraphs.push_back(new Graph(TYPE_ELLIPSE, new RotatedRect(ellipse)));
         }
         return true;
     }
@@ -362,6 +373,9 @@ bool JumpCV::findPlatform(IN cv::Mat img, OUT cv::Point &platformPoint) {
 
     succeed:
     LOGI("platformPoint x=%d, y=%d", platformPoint.x, platformPoint.y);
+    if (DEBUG_TYPE & DEBUG_DEST) {
+        g_debugGraphs.push_back(new Graph(TYPE_POINT, new Point(platformPoint)));
+    }
     return true;
 }
 
