@@ -45,12 +45,13 @@ class JumpCVDetector {
             return false;
         }
         if (newFrame == oldFrame) {
-            LogUtils.d("two frames are the same object");
+            LogUtils.i("two frames are the same object");
             return true;
         }
 
         Point newChessPosition = getChessPosition(newFrame);
         if (newChessPosition == null) {
+            lastChessPosition = null;
             return false;
         }
         LogUtils.i("new chess point (%d, %d)", newChessPosition.x, newChessPosition.y);
@@ -60,6 +61,7 @@ class JumpCVDetector {
             LogUtils.i("chess is stabled");
             Point newPlatformPosition = getNextPlatformPosition(newFrame);
             if (newPlatformPosition == null) {
+                lastPlatformPosition = null;
                 return false;
             }
             LogUtils.i("new platform point (%d, %d)", newPlatformPosition.x, newPlatformPosition.y);

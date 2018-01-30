@@ -3,6 +3,7 @@ package com.sickworm.wechat.jumphelper;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.PixelFormat;
 import android.hardware.display.DisplayManager;
 import android.media.Image;
@@ -32,7 +33,7 @@ public class DeviceHelper {
     private final Object lock = new Object();
     private boolean permissionGranted = false;
     private ImageReader imageReader;
-    private Bitmap cache;
+    private Bitmap cache = null;
     private ExecutorService singleExecutor = Executors.newSingleThreadExecutor();
 
     public static DeviceHelper getInstance() {
@@ -69,6 +70,17 @@ public class DeviceHelper {
             LogUtils.e(e);
             return false;
         }
+        Image image = imageReader.acquireLatestImage();
+        int width = image.getWidth();
+        int height = image.getHeight();
+        final Image.Plane[] planes = image.getPlanes();
+        final ByteBuffer buffer = planes[0].getBuffer();
+        int pixelStride = planes[0].getPixelStride();
+        int rowStride = planes[0].getRowStride();
+        int rowPadding = rowStride - pixelStride * width;
+        cache = Bitmap.createBitmap(width + rowPadding / pixelStride, height, Bitmap.Config.RGB_565);
+        cache.copyPixelsFromBuffer(buffer);
+        image.close();
         return true;
     }
 
@@ -103,7 +115,7 @@ public class DeviceHelper {
                 LogUtils.d("no new image");
                 return cache;
             }
-            cache = imageToBitmap(image);
+            imageToBitmap(image, cache);
             image.close();
             return cache;
         } catch (Exception e) {
@@ -112,17 +124,10 @@ public class DeviceHelper {
         }
     }
 
-    private static Bitmap imageToBitmap(Image image) {
-        int width = image.getWidth();
-        int height = image.getHeight();
+    private void imageToBitmap(Image image, Bitmap bitmap) {
         final Image.Plane[] planes = image.getPlanes();
         final ByteBuffer buffer = planes[0].getBuffer();
-        int pixelStride = planes[0].getPixelStride();
-        int rowStride = planes[0].getRowStride();
-        int rowPadding = rowStride - pixelStride * width;
-        Bitmap bitmap = Bitmap.createBitmap(width + rowPadding / pixelStride, height, Bitmap.Config.RGB_565);
         bitmap.copyPixelsFromBuffer(buffer);
-        return Bitmap.createBitmap(bitmap, 0, 0, width, height);
     }
 
     @SuppressWarnings("UnusedReturnValue")

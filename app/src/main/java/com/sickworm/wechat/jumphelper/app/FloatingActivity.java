@@ -1,5 +1,6 @@
 package com.sickworm.wechat.jumphelper.app;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -32,6 +33,15 @@ public class FloatingActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 jumpHelper.start(FloatingActivity.this);
+                finish();
+            }
+        });
+        findViewById(R.id.button_close).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(FloatingActivity.this, MyService.class);
+                intent.putExtra(MyService.ACTION, MyService.HIDE);
+                startService(intent);
                 finish();
             }
         });

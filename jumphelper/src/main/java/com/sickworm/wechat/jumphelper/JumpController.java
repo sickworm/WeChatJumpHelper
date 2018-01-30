@@ -68,24 +68,23 @@ class JumpController {
 
     Result next() {
         int count = STABLE_WAIT_COUNT;
-        Mat currentFrame;
-        Mat lastFrame = null;
+
+        Mat lastFrame = new Mat();
+        Mat currentFrame = new Mat();
+        if (!getScreenMat(lastFrame)) {
+            return new Result(JumpError.SCREEN_RECORD_FAILED);
+        }
         while (count-- > 0) {
-            Bitmap currentFrameBitmap = deviceHelper.getCurrentFrame();
-            if (currentFrameBitmap == null) {
+            if (!getScreenMat(currentFrame)) {
                 return new Result(JumpError.SCREEN_RECORD_FAILED);
             }
-            currentFrame = new Mat();
-            Utils.bitmapToMat(currentFrameBitmap, currentFrame);
-            if (STORE_FRAME) {
-                saveMat(currentFrame);
-            }
-
             jumpCVDetector.clearDebugGraphs();
             if (jumpCVDetector.isScreenStabled(currentFrame, lastFrame)) {
                 break;
             }
-            lastFrame = currentFrame;
+            Mat t = currentFrame;
+            currentFrame = lastFrame;
+            lastFrame = t;
             try {
                 Thread.sleep(STABLE_WAIT_DURATION);
             } catch (InterruptedException e) {
@@ -117,6 +116,15 @@ class JumpController {
         deviceHelper.doPressAsync(chessPoint, pressTimeMill);
 
         return new Result(chessPoint, platformPoint, pressTimeMill);
+    }
+
+    private boolean getScreenMat(Mat frame) {
+        Bitmap currentFrameBitmap = deviceHelper.getCurrentFrame();
+        if (currentFrameBitmap == null) {
+            return false;
+        }
+        Utils.bitmapToMat(currentFrameBitmap, frame);
+        return true;
     }
 
     List<Graph> getDebugGraphs() {

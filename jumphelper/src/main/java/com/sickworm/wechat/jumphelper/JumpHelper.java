@@ -78,17 +78,9 @@ public class JumpHelper {
                         case INTERRUPTED:
                             interrupt();
                             break;
-                        case NO_CHESS:
-                            onError(JumpError.NO_CHESS);
-                            break loop;
-                        case NOT_STABLE:
-                            onError(JumpError.NOT_STABLE);
-                            break loop;
-                        case NO_PLATFORM:
-                            onError(JumpError.NO_PLATFORM);
-                            break loop;
                         default:
-                            break;
+                            onError(result.error);
+                            break loop;
                     }
                 }
                 doStop();
