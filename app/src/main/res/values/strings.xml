@@ -16,4 +16,6 @@
     <string name="get_root_failed">获取 root 权限失败！助手将无法正常使用</string>
     <string name="not_stable">画面不稳定，停止操作</string>
     <string name="close">关闭助手</string>
+    <string name="ok">OK!</string>
+    <string name="failed">Failed！</string>
 </resources>

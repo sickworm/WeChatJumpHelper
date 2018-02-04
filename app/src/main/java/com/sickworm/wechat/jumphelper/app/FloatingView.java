@@ -24,7 +24,6 @@ import java.util.List;
  */
 @SuppressWarnings("FieldCanBeLocal")
 public class FloatingView extends FrameLayout {
-    private static final boolean SHOW_DEBUG_VIEW = true;
     private static final int ALIGN_X_DP = 48;
     private static final int START_Y_DP = 180;
     private View mFloatingView;
@@ -61,9 +60,7 @@ public class FloatingView extends FrameLayout {
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN | WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR;
         debugViewParams.width = LayoutParams.MATCH_PARENT;
         debugViewParams.height = LayoutParams.MATCH_PARENT;
-        if (SHOW_DEBUG_VIEW) {
-            floatingManager.addView(overlayDebugView, debugViewParams);
-        }
+        floatingManager.addView(overlayDebugView, debugViewParams);
 
         params = new WindowManager.LayoutParams();
 
@@ -86,9 +83,7 @@ public class FloatingView extends FrameLayout {
 
     public void hide() {
         floatingManager.removeView(mFloatingView);
-        if (SHOW_DEBUG_VIEW) {
-            floatingManager.removeView(overlayDebugView);
-        }
+        floatingManager.removeView(overlayDebugView);
     }
 
     public void setDebugGraphs(List<Graph> graphs) {

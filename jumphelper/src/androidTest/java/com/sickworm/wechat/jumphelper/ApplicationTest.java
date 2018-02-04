@@ -2,11 +2,16 @@ package com.sickworm.wechat.jumphelper;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.test.ApplicationTestCase;
 import android.util.DisplayMetrics;
+import android.util.Size;
 import android.view.WindowManager;
 
 import com.apkfuns.logutils.LogUtils;
+import com.sickworm.wechat.graph.NativeMat;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -82,5 +87,30 @@ public class ApplicationTest extends ApplicationTestCase<Application> {
         } catch (IOException e) {
             LogUtils.e(e);
         }
+    }
+
+    public void testOpenCVSpeed() {
+        Context context = getSystemContext();
+        Size screenSize = ScreenUtils.getScreenSize(context);
+        float density = ScreenUtils.getDensity(context);
+        JumpCVDetector jumpCVDetector = new JumpCVDetector(
+                screenSize.getWidth(), screenSize.getHeight(), density);
+
+        DeviceHelper deviceHelper = DeviceHelper.getInstance();
+        deviceHelper.start(getSystemContext());
+        Bitmap bitmap = deviceHelper.getCurrentFrame();
+        NativeMat mat1 = new NativeMat();
+        NativeMat.bitmapToMat(bitmap, mat1);
+
+        int total = 20;
+        int count = 0;
+        long startTime = System.currentTimeMillis();
+        while (count++ < total) {
+            jumpCVDetector.getChessPosition(mat1);
+            jumpCVDetector.getPlatformPosition(mat1);
+        }
+        long stopTime = System.currentTimeMillis();
+
+        LogUtils.e("total %dms, arrange %dms",  stopTime - startTime, (stopTime - startTime) / total);
     }
 }

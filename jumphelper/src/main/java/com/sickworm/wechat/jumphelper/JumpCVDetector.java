@@ -2,9 +2,8 @@ package com.sickworm.wechat.jumphelper;
 
 import com.apkfuns.logutils.LogUtils;
 import com.sickworm.wechat.graph.Graph;
+import com.sickworm.wechat.graph.NativeMat;
 import com.sickworm.wechat.graph.Point;
-
-import org.opencv.core.Mat;
 
 import java.util.List;
 
@@ -18,7 +17,7 @@ import java.util.List;
 @SuppressWarnings("WeakerAccess")
 class JumpCVDetector {
     private long nativeObj;
-    private Mat lastFrame = null;
+    private NativeMat lastFrame = null;
     private Point lastChessPosition = null;
     private Point lastPlatformPosition = null;
 
@@ -40,7 +39,7 @@ class JumpCVDetector {
     /**
      * 判断画面是否稳定，稳定后方可做下一步
      */
-    boolean isScreenStabled(Mat newFrame, Mat oldFrame) {
+    boolean isScreenStabled(NativeMat newFrame, NativeMat oldFrame) {
         if (newFrame == null || oldFrame == null) {
             return false;
         }
@@ -59,7 +58,7 @@ class JumpCVDetector {
         lastChessPosition = newChessPosition;
         if (newChessPosition.equals(oldChessPosition)) {
             LogUtils.i("chess is stabled");
-            Point newPlatformPosition = getNextPlatformPosition(newFrame);
+            Point newPlatformPosition = getPlatformPosition(newFrame);
             if (newPlatformPosition == null) {
                 lastPlatformPosition = null;
                 return false;
@@ -88,7 +87,7 @@ class JumpCVDetector {
     /**
      * 获取棋子位置，找不到返回  null
      */
-    Point getChessPosition(Mat currentFrame) {
+    Point getChessPosition(NativeMat currentFrame) {
         if (currentFrame == null) {
             return null;
         }
@@ -98,7 +97,7 @@ class JumpCVDetector {
     /**
      * 获取下一个跳台的位置，找不到返回  null
      */
-    Point getNextPlatformPosition(Mat currentFrame) {
+    Point getPlatformPosition(NativeMat currentFrame) {
         if (currentFrame == null) {
             return null;
         }
@@ -124,8 +123,8 @@ class JumpCVDetector {
 
     private static native long newInstance(int width, int height, float density);
     private static native long deleteInstance(long instance);
-    private static native Point findChess(long instance, long mat);
-    private static native Point findPlatform(long instance, long mat);
+    private static native Point findChess(long instance, long NativeMat);
+    private static native Point findPlatform(long instance, long NativeMat);
     private static native void clearDebugGraphs(long instance);
     private static native List<Graph> getDebugGraphs(long instance);
 }

@@ -8,10 +8,8 @@ import android.util.Size;
 
 import com.apkfuns.logutils.LogUtils;
 import com.sickworm.wechat.graph.Graph;
+import com.sickworm.wechat.graph.NativeMat;
 import com.sickworm.wechat.graph.Point;
-
-import org.opencv.android.Utils;
-import org.opencv.core.Mat;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -24,7 +22,7 @@ import java.util.List;
  */
 class JumpController {
     private static final int STABLE_MAX_WAIT_MILL = 3000;
-    private static final int STABLE_WAIT_DURATION = 100;
+    private static final int STABLE_WAIT_DURATION = 200;
     private static final int STABLE_WAIT_COUNT = STABLE_MAX_WAIT_MILL / STABLE_WAIT_DURATION;
     private static final int MIN_JUMP_TIME_MILL = 10;
     private static final boolean STORE_FRAME = false;
@@ -43,15 +41,14 @@ class JumpController {
      * 外部调节用，距离—>按压时间 系数的偏差修正
      */
     private double correctionValue;
-    private DisplayMetrics metrics;
     private DeviceHelper deviceHelper;
     private Context context;
+    private float density;
 
     JumpController(Context context, double correctionValue) {
         this.context = context.getApplicationContext();
-        metrics = context.getResources().getDisplayMetrics();
         Size screenSize = ScreenUtils.getScreenSize(context);
-        float density = ScreenUtils.getDensity(context);
+        density = ScreenUtils.getDensity(context);
         jumpCVDetector = new JumpCVDetector(
                 screenSize.getWidth(), screenSize.getHeight(), density);
         this.correctionValue = correctionValue;
@@ -69,8 +66,8 @@ class JumpController {
     Result next() {
         int count = STABLE_WAIT_COUNT;
 
-        Mat lastFrame = new Mat();
-        Mat currentFrame = new Mat();
+        NativeMat lastFrame = new NativeMat();
+        NativeMat currentFrame = new NativeMat();
         if (!getScreenMat(lastFrame)) {
             return new Result(JumpError.SCREEN_RECORD_FAILED);
         }
@@ -78,11 +75,14 @@ class JumpController {
             if (!getScreenMat(currentFrame)) {
                 return new Result(JumpError.SCREEN_RECORD_FAILED);
             }
+            if (STORE_FRAME) {
+                saveMat(currentFrame);
+            }
             jumpCVDetector.clearDebugGraphs();
             if (jumpCVDetector.isScreenStabled(currentFrame, lastFrame)) {
                 break;
             }
-            Mat t = currentFrame;
+            NativeMat t = currentFrame;
             currentFrame = lastFrame;
             lastFrame = t;
             try {
@@ -106,7 +106,7 @@ class JumpController {
             return new Result(JumpError.NOT_STABLE);
         }
 
-        double distance = jumpCVDetector.calculateDistanceDp(chessPoint, platformPoint, metrics.density);
+        double distance = jumpCVDetector.calculateDistanceDp(chessPoint, platformPoint, density);
         int pressTimeMill = (int) (distance * DEFAULT_SCALE * correctionValue
                 - distance * distance / DEFAULT_SCALE2
                 + MIN_JUMP_TIME_MILL);
@@ -118,12 +118,12 @@ class JumpController {
         return new Result(chessPoint, platformPoint, pressTimeMill);
     }
 
-    private boolean getScreenMat(Mat frame) {
+    private boolean getScreenMat(NativeMat frame) {
         Bitmap currentFrameBitmap = deviceHelper.getCurrentFrame();
         if (currentFrameBitmap == null) {
             return false;
         }
-        Utils.bitmapToMat(currentFrameBitmap, frame);
+        NativeMat.bitmapToMat(currentFrameBitmap, frame);
         return true;
     }
 
@@ -152,11 +152,11 @@ class JumpController {
         }
     }
 
-    private void saveMat(Mat mat) {
+    private void saveMat(NativeMat mat) {
         int width = mat.width();
         int height = mat.height();
         Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
-        Utils.matToBitmap(mat, bitmap);
+        NativeMat.matToBitmap(mat, bitmap);
         File f = new File(Environment.getExternalStorageDirectory().getPath() + "/current_frame.png");
         if (f.exists()) {
             if (!f.delete()) {

@@ -16,8 +16,9 @@ android {
     }
 
     sourceSets{
-        main{
+        main {
             jniLibs.srcDir 'src/main/jni/opencv/libs'
+            res.srcDir 'src/androidTest/res'
         }
     }
 
@@ -25,9 +26,6 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
-        debug {
-            jniDebuggable true
         }
     }
 

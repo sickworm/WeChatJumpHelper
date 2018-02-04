@@ -14,7 +14,7 @@ import java.util.List;
  * Created by sickworm on 2017/12/30.
  */
 public class JumpHelper {
-    private static final int STEP_DURATION_MILL = 1000;
+    private static final int STEP_DURATION_MILL = 2000;
     private static final double DEFAULT_CORRECTION_VALUE = 1;
     private static volatile JumpHelper instance;
 

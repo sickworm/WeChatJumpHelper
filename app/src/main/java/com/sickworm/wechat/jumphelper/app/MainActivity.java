@@ -3,12 +3,13 @@ package com.sickworm.wechat.jumphelper.app;
 import android.content.Intent;
 import android.os.Build;
 import android.provider.Settings;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.apkfuns.logutils.LogUtils;
@@ -20,6 +21,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        LogUtils.getLogConfig().configShowBorders(false);
 
         Button showButton = findViewById(R.id.btn_show);
         Button hideButton = findViewById(R.id.btn_hide);
@@ -40,13 +43,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public boolean onTouchEvent(MotionEvent event) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_UP:
-                LogUtils.i("UP %f %f", event.getRawX(), event.getRawY());
+                LogUtils.d("UP %f %f", event.getRawX(), event.getRawY());
                 break;
             case MotionEvent.ACTION_DOWN:
-                LogUtils.i("DOWN %f %f", event.getRawX(), event.getRawY());
+                LogUtils.d("DOWN %f %f", event.getRawX(), event.getRawY());
                 break;
             case MotionEvent.ACTION_MOVE:
-                LogUtils.i("MOVE %f %f", event.getRawX(), event.getRawY());
+                LogUtils.d("MOVE %f %f", event.getRawX(), event.getRawY());
                 break;
         }
         return super.onTouchEvent(event);
@@ -67,8 +70,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 finish();
                 break;
             case R.id.btn_check_root:
-                if (!checkRoot()) {
+                boolean gotRootPermission = checkRoot();
+                TextView rootStatusTextView = findViewById(R.id.tv_root_status);
+                if (gotRootPermission) {
+                    rootStatusTextView.setText(R.string.ok);
+                    rootStatusTextView.setTextColor(ContextCompat.getColor(this, R.color.light_green));
+                } else {
                     toast(R.string.get_root_failed);
+                    rootStatusTextView.setText(R.string.failed);
+                    rootStatusTextView.setTextColor(ContextCompat.getColor(this, R.color.light_red));
                 }
                 break;
             case R.id.btn_check_floating_window:
@@ -76,6 +86,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     if (!Settings.canDrawOverlays(this)) {
                         Intent myIntent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
                         startActivity(myIntent);
+                        break;
+                    } else {
+                        TextView floatingStatusTextView = findViewById(R.id.tv_floating_status);
+                        floatingStatusTextView.setText(R.string.ok);
+                        floatingStatusTextView.setTextColor(ContextCompat.getColor(this, R.color.light_green));
                     }
                 }
                 break;
