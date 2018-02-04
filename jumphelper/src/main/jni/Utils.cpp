@@ -66,7 +66,6 @@ void bitmapToMat2(JNIEnv * env, jclass, jobject bitmap, jlong m_addr, jboolean n
         } else {
             // info.format == ANDROID_BITMAP_FORMAT_RGB_565
             LOGD("nBitmapToMat: RGB_565 -> CV_8UC4");
-            LOGD("%d %d %d %d %d %d");
             if (tmp.cols != info.width || tmp.rows != info.height || tmp.type() != CV_8UC2) {
                 tmp = Mat(info.height, info.width, CV_8UC2, pixels);
             } else {

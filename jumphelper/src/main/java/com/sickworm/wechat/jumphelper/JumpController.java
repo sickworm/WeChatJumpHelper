@@ -45,6 +45,11 @@ class JumpController {
     private Context context;
     private float density;
 
+    private NativeMat lastFrame;
+    private NativeMat currentFrame;
+
+    private int count = 0;
+
     JumpController(Context context, double correctionValue) {
         this.context = context.getApplicationContext();
         Size screenSize = ScreenUtils.getScreenSize(context);
@@ -53,6 +58,9 @@ class JumpController {
                 screenSize.getWidth(), screenSize.getHeight(), density);
         this.correctionValue = correctionValue;
         this.deviceHelper = DeviceHelper.getInstance();
+
+        lastFrame = new NativeMat();
+        currentFrame = new NativeMat();
     }
 
     boolean start() {
@@ -66,9 +74,7 @@ class JumpController {
     Result next() {
         int count = STABLE_WAIT_COUNT;
 
-        NativeMat lastFrame = new NativeMat();
-        NativeMat currentFrame = new NativeMat();
-        if (!getScreenMat(lastFrame)) {
+        if (count++ < 5 || !getScreenMat(lastFrame)) {
             return new Result(JumpError.SCREEN_RECORD_FAILED);
         }
         while (count-- > 0) {

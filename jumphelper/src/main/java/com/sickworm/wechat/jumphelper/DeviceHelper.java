@@ -57,7 +57,7 @@ public class DeviceHelper {
         if (!getRecordPermission(context)) {
             return false;
         }
-        imageReader = ImageReader.newInstance(screenSize.getWidth(),screenSize.getHeight(), PixelFormat.RGB_565, 2);
+        imageReader = ImageReader.newInstance(screenSize.getWidth(),screenSize.getHeight(), PixelFormat.RGBA_8888, 2);
         projection.createVirtualDisplay("jumpHelper",
                 screenSize.getWidth(), screenSize.getHeight(),
                 densityDpi, DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC,
@@ -78,7 +78,7 @@ public class DeviceHelper {
         int pixelStride = planes[0].getPixelStride();
         int rowStride = planes[0].getRowStride();
         int rowPadding = rowStride - pixelStride * width;
-        cache = Bitmap.createBitmap(width + rowPadding / pixelStride, height, Bitmap.Config.RGB_565);
+        cache = Bitmap.createBitmap(width + rowPadding / pixelStride, height, Bitmap.Config.ARGB_8888);
         cache.copyPixelsFromBuffer(buffer);
         image.close();
         return true;
