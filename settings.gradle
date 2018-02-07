@@ -1,2 +1,1 @@
 include ':app', ':jumphelper'
-include ':openCVLibrary340'

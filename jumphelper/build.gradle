@@ -41,5 +41,4 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:26.1.0'
     compile 'com.apkfuns.logutils:library:1.5.1.1'
-    compile project(':openCVLibrary340')
 }

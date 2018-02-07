@@ -3,7 +3,6 @@ package com.sickworm.wechat.jumphelper;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.PixelFormat;
 import android.hardware.display.DisplayManager;
 import android.media.Image;
@@ -124,7 +123,7 @@ public class DeviceHelper {
         }
     }
 
-    private void imageToBitmap(Image image, Bitmap bitmap) {
+    private static void imageToBitmap(Image image, Bitmap bitmap) {
         final Image.Plane[] planes = image.getPlanes();
         final ByteBuffer buffer = planes[0].getBuffer();
         bitmap.copyPixelsFromBuffer(buffer);

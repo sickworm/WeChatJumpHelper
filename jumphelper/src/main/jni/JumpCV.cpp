@@ -34,9 +34,8 @@ bool JumpCV::findChess(IN Mat img, OUT Point &chessPoint) {
     int h2 = 135;
     int s2 = 130;
     int v2 = 110;
-    // TODO 适配屏幕分辨率
-    int chessMinArea = 5000;
-    int chessMaxArea = 11000;
+    int chessMinArea = (int) (1600 * g_density);
+    int chessMaxArea = (int) (3500 * g_density);
 
     // 转成 HSV，方便滤色
     cvtColor(img, hsv, COLOR_RGB2HSV);
@@ -116,12 +115,11 @@ bool JumpCV::findPlatformSquare(IN Mat img, OUT Point &platformPoint) {
     int maxLineGap = 10;
     int rho = 10;
     int theta = 180;
-    // TODO 屏幕适配
-    int minLineHeadGap = 10;
-    int minLineTailDistance = 50;
     int standardAngle = 130;
     int angleDeviation = 20;
     int threshold = 50;
+    int minLineHeadGap = (int) (3.3 * g_density);
+    int minLineTailDistance = (int) (18 * g_density);
 
     GaussianBlur(img, blu, Size(7, 7), 2, 2);
     Canny(blu, binary, threshold1, threshold2);
@@ -206,11 +204,11 @@ bool JumpCV::findPlatformCircle(IN Mat img, OUT Point &platformPoint) {
     int threshold2 = 35;
     int minAngle = 80;
     int maxAngle = 100;
-    // TODO 适配屏幕
-    int minArea = 10000;
-    int maxArea = 400000;
-    int minHeight = 500;
-    int minEdgeX = 100;
+
+    int minArea = (int) (3300 * g_density);
+    int maxArea = (int) (130000 * g_density);
+    int minHeight = (int) (180 * g_density);
+    int minEdgeX = (int) (33 * g_density);
 
     Canny(img, binary, threshold1, threshold2);
     vector<vector<Point> > contours;
@@ -276,14 +274,14 @@ bool JumpCV::findWhitePoint(IN Mat img, OUT Point &whitePoint) {
     int h = 0;
     int s = 0;
     int v = 240;
-    int h2 = 360;
-    int s2 = 10;
+    int h2 = 0;
+    int s2 = 0;
     int v2 = 250;
     float ellipseMinScale = 0.3f;
     float ellipseMinAngle = 80;
-    // TODO 屏幕适配
-    int pointMinArea = 2000;
-    int pointMaxArea = 3000;
+
+    int pointMinArea = (int) (700 * g_density);
+    int pointMaxArea = (int) (1000 * g_density);
 
     // 过滤颜色
     cvtColor(img, hsv, COLOR_RGB2HSV);

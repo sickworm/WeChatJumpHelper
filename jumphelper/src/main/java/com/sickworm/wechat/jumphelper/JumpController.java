@@ -48,8 +48,6 @@ class JumpController {
     private NativeMat lastFrame;
     private NativeMat currentFrame;
 
-    private int count = 0;
-
     JumpController(Context context, double correctionValue) {
         this.context = context.getApplicationContext();
         Size screenSize = ScreenUtils.getScreenSize(context);
@@ -119,7 +117,7 @@ class JumpController {
 
         LogUtils.i("jump from (%d, %d) to (%d, %d) for %d mill",
                 chessPoint.x, chessPoint.y, platformPoint.x, platformPoint.y, pressTimeMill);
-        deviceHelper.doPressAsync(chessPoint, pressTimeMill);
+//        deviceHelper.doPressAsync(chessPoint, pressTimeMill);
 
         return new Result(chessPoint, platformPoint, pressTimeMill);
     }
@@ -175,7 +173,7 @@ class JumpController {
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
             out.flush();
             out.close();
-            LogUtils.i("save bitmap succeed");
+            LogUtils.d("save bitmap succeed");
         } catch (Exception e) {
             LogUtils.e(e);
         }
