@@ -2,16 +2,15 @@ package com.sickworm.wechat.jumphelper;
 
 import android.app.Application;
 import android.content.Context;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.test.ApplicationTestCase;
 import android.util.DisplayMetrics;
-import android.util.Size;
 import android.view.WindowManager;
 
 import com.apkfuns.logutils.LogUtils;
 import com.sickworm.wechat.graph.NativeMat;
+import com.sickworm.wechat.graph.Rect;
+import com.sickworm.wechat.graph.Size;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -94,7 +93,7 @@ public class ApplicationTest extends ApplicationTestCase<Application> {
         Size screenSize = ScreenUtils.getScreenSize(context);
         float density = ScreenUtils.getDensity(context);
         JumpCVDetector jumpCVDetector = new JumpCVDetector(
-                screenSize.getWidth(), screenSize.getHeight(), density);
+                screenSize.width, screenSize.height, density);
 
         DeviceHelper deviceHelper = DeviceHelper.getInstance();
         deviceHelper.start(getSystemContext());
@@ -102,12 +101,23 @@ public class ApplicationTest extends ApplicationTestCase<Application> {
         NativeMat mat1 = new NativeMat();
         NativeMat.bitmapToMat(bitmap, mat1);
 
+
+        Rect roi = new Rect(
+                (int) (screenSize.width * 0f),
+                (int) (screenSize.height * 0.3f),
+                (int) (screenSize.width * 1f),
+                (int) (screenSize.height * 0.4)
+        );
+        NativeMat mat2 = new NativeMat();
+        NativeMat.matROI(mat1, mat2,
+                roi.origin.x, roi.origin.y, roi.size.width, roi.size.height);
+
         int total = 20;
         int count = 0;
         long startTime = System.currentTimeMillis();
         while (count++ < total) {
-            jumpCVDetector.getChessPosition(mat1);
-            jumpCVDetector.getPlatformPosition(mat1);
+            jumpCVDetector.getChessPosition(mat2);
+            jumpCVDetector.getPlatformPosition(mat2);
         }
         long stopTime = System.currentTimeMillis();
 

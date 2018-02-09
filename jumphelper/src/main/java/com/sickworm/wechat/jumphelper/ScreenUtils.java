@@ -3,7 +3,8 @@ package com.sickworm.wechat.jumphelper;
 import android.content.Context;
 import android.content.res.Resources;
 import android.util.DisplayMetrics;
-import android.util.Size;
+
+import com.sickworm.wechat.graph.Size;
 
 /**
  * 获取屏幕信息

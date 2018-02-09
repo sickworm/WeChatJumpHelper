@@ -9,10 +9,10 @@ import android.media.Image;
 import android.media.ImageReader;
 import android.media.projection.MediaProjection;
 import android.os.Build;
-import android.util.Size;
 
 import com.apkfuns.logutils.LogUtils;
 import com.sickworm.wechat.graph.Point;
+import com.sickworm.wechat.graph.Size;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -53,12 +53,13 @@ public class DeviceHelper {
         Size screenSize = ScreenUtils.getScreenSize(context);
         int densityDpi = ScreenUtils.getDensityDpi(context);
 
+        // TODO 独立申请权限接口，此处仅检测
         if (!getRecordPermission(context)) {
             return false;
         }
-        imageReader = ImageReader.newInstance(screenSize.getWidth(),screenSize.getHeight(), PixelFormat.RGBA_8888, 2);
+        imageReader = ImageReader.newInstance(screenSize.width,screenSize.height, PixelFormat.RGBA_8888, 2);
         projection.createVirtualDisplay("jumpHelper",
-                screenSize.getWidth(), screenSize.getHeight(),
+                screenSize.width, screenSize.height,
                 densityDpi, DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC,
                 imageReader.getSurface(), null, null);
 

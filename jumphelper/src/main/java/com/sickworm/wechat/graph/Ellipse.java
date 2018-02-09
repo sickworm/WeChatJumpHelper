@@ -32,7 +32,7 @@ public class Ellipse extends Graph {
 
     @Override
     public void draw(Canvas canvas) {
-        // 忽略 angle，因为很难画。JNI 传来的角度是80 ~ 100度，所以width 和 height 交换
+        // 忽略 angle，因为很难画。JNI 传来的角度是80 ~ 100度，所以 width 和 height 交换
         canvas.drawOval(center.x - size.getHeight() / 2,
                 center.y - size.getWidth() / 2,
                 center.x + size.getHeight() / 2,

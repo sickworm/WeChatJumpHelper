@@ -20,6 +20,10 @@ public class NativeMat {
         matToBitmap(mat.nativeObj, bitmap);
     }
 
+    public static void matROI(NativeMat originMat, NativeMat roiMat, int x, int y, int width, int height) {
+        matROI(originMat.nativeObj, roiMat.nativeObj, x, y, width, height);
+    }
+
     public NativeMat() {
         nativeObj = newMat();
     }
@@ -44,4 +48,5 @@ public class NativeMat {
 
     private static native void bitmapToMat(Bitmap bitmap, long mat);
     private static native void matToBitmap(long mat, Bitmap bitmap);
+    private static native void matROI(long originMat, long roiMat, int x, int y, int width, int height);
 }

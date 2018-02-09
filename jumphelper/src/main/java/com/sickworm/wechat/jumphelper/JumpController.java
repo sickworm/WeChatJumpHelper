@@ -3,13 +3,15 @@ package com.sickworm.wechat.jumphelper;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Environment;
-import android.util.DisplayMetrics;
-import android.util.Size;
 
 import com.apkfuns.logutils.LogUtils;
+import com.sickworm.wechat.graph.Ellipse;
 import com.sickworm.wechat.graph.Graph;
+import com.sickworm.wechat.graph.Line;
 import com.sickworm.wechat.graph.NativeMat;
 import com.sickworm.wechat.graph.Point;
+import com.sickworm.wechat.graph.Rect;
+import com.sickworm.wechat.graph.Size;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -34,31 +36,59 @@ class JumpController {
     /**
      * 距离 dp 转换为按压时间 s 的系数2
      */
-    private static final double DEFAULT_SCALE2 = 120000;
+    private static final int DEFAULT_SCALE2 = 120000;
+    /**
+     * 检测区域 x 上限
+     */
+    private static final double ROI_TOP_X_SCALE = 0;
+    /**
+     * 检测区域 x 下限
+     */
+    private static final double ROI_BOTTOM_X_SCALE = 1;
+    /**
+     * 检测区域 y 上限
+     */
+    private static final double ROI_TOP_Y_SCALE = 0.3;
+    /**
+     * 检测区域 y 下限
+     */
+    private static final double ROI_BOTTOM_Y_SCALE = 0.7;
 
     private JumpCVDetector jumpCVDetector;
+    private DeviceHelper deviceHelper;
+    private Context context;
+
+    private NativeMat currentFrame;
+    private NativeMat lastROIFrame;
+    private NativeMat currentROIFrame;
+
     /**
      * 外部调节用，距离—>按压时间 系数的偏差修正
      */
     private double correctionValue;
-    private DeviceHelper deviceHelper;
-    private Context context;
-    private float density;
-
-    private NativeMat lastFrame;
-    private NativeMat currentFrame;
+    /**
+     * 检测区域
+     */
+    private Rect roi;
 
     JumpController(Context context, double correctionValue) {
         this.context = context.getApplicationContext();
         Size screenSize = ScreenUtils.getScreenSize(context);
-        density = ScreenUtils.getDensity(context);
-        jumpCVDetector = new JumpCVDetector(
-                screenSize.getWidth(), screenSize.getHeight(), density);
+        float density = ScreenUtils.getDensity(context);
+        jumpCVDetector = new JumpCVDetector(screenSize.width, screenSize.height, density);
         this.correctionValue = correctionValue;
         this.deviceHelper = DeviceHelper.getInstance();
 
-        lastFrame = new NativeMat();
         currentFrame = new NativeMat();
+        currentROIFrame = new NativeMat();
+        lastROIFrame = new NativeMat();
+
+        roi = new Rect(
+                (int) (screenSize.width * ROI_TOP_X_SCALE),
+                (int) (screenSize.height * ROI_TOP_Y_SCALE),
+                (int) (screenSize.width * (ROI_BOTTOM_X_SCALE - ROI_TOP_X_SCALE)),
+                (int) (screenSize.height * (ROI_BOTTOM_Y_SCALE - ROI_TOP_Y_SCALE))
+        );
     }
 
     boolean start() {
@@ -72,23 +102,21 @@ class JumpController {
     Result next() {
         int count = STABLE_WAIT_COUNT;
 
-        if (count++ < 5 || !getScreenMat(lastFrame)) {
+        if (!getNextROIScreenMat()) {
             return new Result(JumpError.SCREEN_RECORD_FAILED);
         }
         while (count-- > 0) {
-            if (!getScreenMat(currentFrame)) {
+            if (!getNextROIScreenMat()) {
                 return new Result(JumpError.SCREEN_RECORD_FAILED);
             }
             if (STORE_FRAME) {
-                saveMat(currentFrame);
+                saveMat(currentROIFrame);
             }
             jumpCVDetector.clearDebugGraphs();
-            if (jumpCVDetector.isScreenStabled(currentFrame, lastFrame)) {
+
+            if (jumpCVDetector.isScreenStabled(currentROIFrame, lastROIFrame)) {
                 break;
             }
-            NativeMat t = currentFrame;
-            currentFrame = lastFrame;
-            lastFrame = t;
             try {
                 Thread.sleep(STABLE_WAIT_DURATION);
             } catch (InterruptedException e) {
@@ -110,7 +138,7 @@ class JumpController {
             return new Result(JumpError.NOT_STABLE);
         }
 
-        double distance = jumpCVDetector.calculateDistanceDp(chessPoint, platformPoint, density);
+        double distance = jumpCVDetector.calculateDistanceDp(chessPoint, platformPoint);
         int pressTimeMill = (int) (distance * DEFAULT_SCALE * correctionValue
                 - distance * distance / DEFAULT_SCALE2
                 + MIN_JUMP_TIME_MILL);
@@ -122,17 +150,56 @@ class JumpController {
         return new Result(chessPoint, platformPoint, pressTimeMill);
     }
 
-    private boolean getScreenMat(NativeMat frame) {
+    /**
+     * 只取屏幕部分作为检测区域
+     */
+    private boolean getNextROIScreenMat() {
+        NativeMat m = lastROIFrame;
+        lastROIFrame = currentROIFrame;
+        currentROIFrame = m;
+        if (!getNextScreenMat()) {
+            return false;
+        }
+        NativeMat.matROI(currentFrame, currentROIFrame,
+                roi.origin.x, roi.origin.y, roi.size.width, roi.size.height);
+        return true;
+    }
+
+    private boolean getNextScreenMat() {
         Bitmap currentFrameBitmap = deviceHelper.getCurrentFrame();
         if (currentFrameBitmap == null) {
             return false;
         }
-        NativeMat.bitmapToMat(currentFrameBitmap, frame);
+        NativeMat.bitmapToMat(currentFrameBitmap, currentFrame);
         return true;
     }
 
     List<Graph> getDebugGraphs() {
-        return jumpCVDetector.getDebugGraphs();
+        List<Graph> graphs = jumpCVDetector.getDebugGraphs();
+        // 将检测区域的点恢复成原屏幕的坐标
+        for(Graph graph : graphs) {
+            if (graph instanceof Point) {
+                Point point = (Point) graph;
+                point.x += roi.origin.x;
+                point.y += roi.origin.y;
+            } else if (graph instanceof Ellipse) {
+                Ellipse ellipse = (Ellipse) graph;
+                ellipse.center.x += roi.origin.x;
+                ellipse.center.y += roi.origin.y;
+            } else if (graph instanceof Line) {
+                Line line = (Line) graph;
+                line.start.x += roi.origin.x;
+                line.start.y += roi.origin.y;
+                line.end.x += roi.origin.x;
+                line.end.y += roi.origin.y;
+            } else if (graph instanceof Rect) {
+                Rect rect = (Rect) graph;
+                rect.origin.x += roi.origin.x;
+                rect.origin.y += roi.origin.y;
+            }
+        }
+        graphs.add(roi);
+        return graphs;
     }
 
     static class Result {

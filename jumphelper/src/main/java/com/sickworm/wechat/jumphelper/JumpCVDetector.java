@@ -14,12 +14,12 @@ import java.util.List;
  *
  * Created by sickworm on 2017/12/30.
  */
-@SuppressWarnings("WeakerAccess")
 class JumpCVDetector {
     private long nativeObj;
     private NativeMat lastFrame = null;
     private Point lastChessPosition = null;
     private Point lastPlatformPosition = null;
+    private float density;
 
     static {
         System.loadLibrary("opencv_java3");
@@ -27,6 +27,7 @@ class JumpCVDetector {
     }
 
     JumpCVDetector(int width, int height, float density) {
+        this.density = density;
         nativeObj = newInstance(width, height, density);
     }
 
@@ -107,7 +108,7 @@ class JumpCVDetector {
     /**
      * 计算两点间距离 dp
      */
-    double calculateDistanceDp(Point a, Point b, float density) {
+    double calculateDistanceDp(Point a, Point b) {
         int deltaX = a.x - b.x;
         int deltaY = a.y - b.y;
         return Math.sqrt(deltaX * deltaX + deltaY * deltaY) / density;
