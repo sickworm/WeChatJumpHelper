@@ -124,10 +124,6 @@ public class JumpHelper {
         }
     }
 
-    public List<Graph> getDebugGraphs() {
-        return jumpController.getDebugGraphs();
-    }
-
     public interface OnStateChangedListener {
         void onStart();
         void onStepStart();

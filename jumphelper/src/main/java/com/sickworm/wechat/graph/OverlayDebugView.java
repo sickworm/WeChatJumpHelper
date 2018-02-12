@@ -1,4 +1,4 @@
-package com.sickworm.wechat.jumphelper.app;
+package com.sickworm.wechat.graph;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -22,21 +22,37 @@ import java.util.List;
  */
 
 public class OverlayDebugView extends View {
+    private static volatile OverlayDebugView instance;
     private static final Handler MAIN_HANDLER = new Handler(Looper.getMainLooper());
     private List<Graph> graphs = new ArrayList<>();
 
-    public OverlayDebugView(Context context) {
+    /**
+     * 使用该方法方便 SDK 层设置调试内容
+     */
+    public static OverlayDebugView init(Context context) {
+        if (instance == null) {
+            synchronized (OverlayDebugView.class) {
+                if (instance == null) {
+                    instance = new OverlayDebugView(context);
+                }
+            }
+        }
+        return instance;
+    }
+
+    /**
+     * 不用时清空，防止内存泄露
+     */
+    public static void release() {
+        instance = null;
+    }
+
+    public static OverlayDebugView getInstance() {
+        return instance;
+    }
+
+    private OverlayDebugView(Context context) {
         super(context);
-        init();
-    }
-
-    public OverlayDebugView(Context context, @Nullable AttributeSet attrs) {
-        super(context, attrs);
-        init();
-    }
-
-    public OverlayDebugView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
         init();
     }
 
@@ -53,7 +69,7 @@ public class OverlayDebugView extends View {
         }
     }
 
-    void setGraphs(List<Graph> graphs) {
+    public void setGraphs(List<Graph> graphs) {
         this.graphs = graphs;
         MAIN_HANDLER.post(new Runnable() {
             @Override

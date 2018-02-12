@@ -24,7 +24,6 @@ public class MyService extends Service {
     public static final String SHOW = "show";
     public static final String HIDE = "hide";
     private FloatingView floatingView;
-    private JumpHelper jumpHelper;
 
     static {
         LogUtils.getLogConfig().configShowBorders(false);
@@ -34,7 +33,7 @@ public class MyService extends Service {
     public void onCreate() {
         super.onCreate();
         floatingView = new FloatingView(this);
-        jumpHelper = JumpHelper.getInstance();
+        JumpHelper jumpHelper = JumpHelper.getInstance();
         jumpHelper.setOnStatusChangedListener(listener);
     }
 
@@ -74,12 +73,10 @@ public class MyService extends Service {
         @Override
         public void onStepStart() {
             LogUtils.i("step " + count);
-            floatingView.setDebugGraphs(null);
         }
 
         @Override
         public void onStep(Point from, Point to, double pressTime) {
-            floatingView.setDebugGraphs(jumpHelper.getDebugGraphs());
             if (count++ % 10 == 0) {
                 toast(String.format(getString(R.string.already_steps), count));
             }
@@ -107,7 +104,6 @@ public class MyService extends Service {
                     toast(R.string.screen_record_failed);
                     break;
             }
-            floatingView.clearDebugGraphs();
         }
 
         @Override

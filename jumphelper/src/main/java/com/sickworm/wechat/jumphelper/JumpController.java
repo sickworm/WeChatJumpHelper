@@ -9,6 +9,7 @@ import com.sickworm.wechat.graph.Ellipse;
 import com.sickworm.wechat.graph.Graph;
 import com.sickworm.wechat.graph.Line;
 import com.sickworm.wechat.graph.NativeMat;
+import com.sickworm.wechat.graph.OverlayDebugView;
 import com.sickworm.wechat.graph.Point;
 import com.sickworm.wechat.graph.Rect;
 import com.sickworm.wechat.graph.Size;
@@ -101,6 +102,7 @@ class JumpController {
 
     Result next() {
         int count = STABLE_WAIT_COUNT;
+        OverlayDebugView debugView = OverlayDebugView.getInstance();
 
         if (!getNextROIScreenMat()) {
             return new Result(JumpError.SCREEN_RECORD_FAILED);
@@ -109,8 +111,12 @@ class JumpController {
             if (!getNextROIScreenMat()) {
                 return new Result(JumpError.SCREEN_RECORD_FAILED);
             }
+
             if (STORE_FRAME) {
                 saveMat(currentROIFrame);
+            }
+            if (debugView != null) {
+                debugView.setGraphs(null);
             }
             jumpCVDetector.clearDebugGraphs();
 
@@ -122,6 +128,9 @@ class JumpController {
             } catch (InterruptedException e) {
                 return new Result(JumpError.INTERRUPTED);
             }
+        }
+        if (debugView != null) {
+            debugView.setGraphs(getCorrectedDebugGraphs());
         }
 
         Point chessPoint = jumpCVDetector.getLastChessPosition();
@@ -145,7 +154,7 @@ class JumpController {
 
         LogUtils.i("jump from (%d, %d) to (%d, %d) for %d mill",
                 chessPoint.x, chessPoint.y, platformPoint.x, platformPoint.y, pressTimeMill);
-//        deviceHelper.doPressAsync(chessPoint, pressTimeMill);
+        deviceHelper.doPressAsync(chessPoint, pressTimeMill);
 
         return new Result(chessPoint, platformPoint, pressTimeMill);
     }
@@ -174,9 +183,11 @@ class JumpController {
         return true;
     }
 
-    List<Graph> getDebugGraphs() {
+    /**
+     * 将检测区域点的相对坐标恢复成原屏幕的坐标
+     */
+    private List<Graph> getCorrectedDebugGraphs() {
         List<Graph> graphs = jumpCVDetector.getDebugGraphs();
-        // 将检测区域的点恢复成原屏幕的坐标
         for(Graph graph : graphs) {
             if (graph instanceof Point) {
                 Point point = (Point) graph;
@@ -200,6 +211,10 @@ class JumpController {
         }
         graphs.add(roi);
         return graphs;
+    }
+
+    private void clearDebugGraphs() {
+        jumpCVDetector.clearDebugGraphs();
     }
 
     static class Result {

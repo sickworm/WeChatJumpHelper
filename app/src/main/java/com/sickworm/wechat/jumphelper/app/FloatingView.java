@@ -11,11 +11,8 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 
-import com.sickworm.wechat.graph.Graph;
+import com.sickworm.wechat.graph.OverlayDebugView;
 import com.sickworm.wechat.jumphelper.JumpHelper;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 悬浮窗按钮
@@ -27,7 +24,6 @@ public class FloatingView extends FrameLayout {
     private static final int ALIGN_X_DP = 48;
     private static final int START_Y_DP = 180;
     private View mFloatingView;
-    private OverlayDebugView overlayDebugView;
     private WindowManager.LayoutParams params;
     private FloatingManager floatingManager;
     private int minXPx;
@@ -42,7 +38,6 @@ public class FloatingView extends FrameLayout {
         mFloatingView.setOnClickListener(mOnClickListener);
         minXPx = (int) (ALIGN_X_DP * context.getResources().getDisplayMetrics().density);
         startYPx = (int) (START_Y_DP * context.getResources().getDisplayMetrics().density);
-        overlayDebugView = new OverlayDebugView(context);
 
         floatingManager = FloatingManager.getInstance(context);
     }
@@ -60,7 +55,7 @@ public class FloatingView extends FrameLayout {
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN | WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR;
         debugViewParams.width = LayoutParams.MATCH_PARENT;
         debugViewParams.height = LayoutParams.MATCH_PARENT;
-        floatingManager.addView(overlayDebugView, debugViewParams);
+        floatingManager.addView(OverlayDebugView.init(getContext()), debugViewParams);
 
         params = new WindowManager.LayoutParams();
 
@@ -76,22 +71,14 @@ public class FloatingView extends FrameLayout {
         floatingManager.addView(mFloatingView, params);
 
         if (BuildConfig.QUICK_TEST) {
-
             JumpHelper.getInstance().start(getContext());
         }
     }
 
     public void hide() {
         floatingManager.removeView(mFloatingView);
-        floatingManager.removeView(overlayDebugView);
-    }
-
-    public void setDebugGraphs(List<Graph> graphs) {
-        overlayDebugView.setGraphs(graphs);
-    }
-
-    public void clearDebugGraphs() {
-        overlayDebugView.setGraphs(new ArrayList<Graph>());
+        floatingManager.removeView(OverlayDebugView.init(getContext()));
+        OverlayDebugView.release();
     }
 
     private OnTouchListener mOnTouchListener = new OnTouchListener() {
