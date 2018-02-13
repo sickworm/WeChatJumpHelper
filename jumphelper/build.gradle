@@ -19,6 +19,7 @@ android {
         main {
             jniLibs.srcDir 'src/main/jni/opencv/libs'
             res.srcDir 'src/androidTest/res'
+            assets.srcDirs 'build/outputs/jump/'
         }
     }
 
@@ -35,6 +36,23 @@ android {
         }
     }
 }
+
+task copyJumpExecsDebug(type: Copy) {
+    description = 'Copy jump executable file to assets...'
+    from 'build/intermediates/ndkBuild/debug/obj/local/'
+    into 'build/outputs/jump/jumpexec'
+    include('*/jump')
+}
+copyJumpExecsDebug.dependsOn 'externalNativeBuildDebug'
+
+task copyJumpExecsRelease(type: Copy) {
+    description = 'Copy jump executable file to assets...'
+    from 'build/intermediates/ndkBuild/debug/obj/local/'
+    into 'build/outputs/jump/jumpexec'
+    include('*/jump')
+}
+copyJumpExecsRelease.dependsOn 'externalNativeBuildRelease'
+
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')

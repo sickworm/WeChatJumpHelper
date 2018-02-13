@@ -32,7 +32,6 @@ void FUN(matToBitmap)(JNIEnv *env, jclass type, jlong mat, jobject bitmap) {
     matToBitmap2(env, type, mat, bitmap, JNI_FALSE);
 }
 
-#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR,  "OpenCV", __VA_ARGS__)
 void FUN(matROI)(JNIEnv */*env*/, jclass /*type*/,jlong originMat, jlong roiMat,
                  jint x, jint y, jint width, jint height) {
     cv::Mat *oldMat = (cv::Mat *)originMat;

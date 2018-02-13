@@ -1,25 +1,14 @@
 //
-// Created by chope on 2018/1/10.
+// Created by sickworm on 2018/1/10.
 //
 
 #ifndef WECHATJUMPHELPER_JUMPCV_H
 #define WECHATJUMPHELPER_JUMPCV_H
 
-#include <android/log.h>
-
 #include <opencv2/opencv.hpp>
 
 #include "Graph.h"
-
-#define IN
-#define OUT
-#define IN_OUT
-
-#define LOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, "JumpCV", __VA_ARGS__)
-#define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG,  "JumpCV", __VA_ARGS__)
-#define LOGI(...) __android_log_print(ANDROID_LOG_INFO,  "JumpCV", __VA_ARGS__)
-#define LOGW(...) __android_log_print(ANDROID_LOG_WARN,  "JumpCV", __VA_ARGS__)
-#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, "JumpCV", __VA_ARGS__)
+#include "common.h"
 
 
 #define DEBUG_DEST 1 << 0
@@ -27,7 +16,8 @@
 #define DEBUG_CIRCLE 1 << 2
 #define DEBUG_SQUARE 1 << 3
 #define DEBUG_WHITE_POINT 1 << 4
-#define DEBUG_CONTOUR 1 << 5
+#define DEBUG_CHESS 1 << 5
+#define DEBUG_CONTOUR 1 << 6    // 需要和 2,3,4,5 配合使用
 #define DEBUG_ALL 0xFFFFFFFF
 
 #define DEBUG_TYPE DEBUG_ALL_DEST

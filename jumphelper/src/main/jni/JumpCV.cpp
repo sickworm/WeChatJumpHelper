@@ -1,5 +1,5 @@
 //
-// Created by chope on 2018/1/10.
+// Created by sickworm on 2018/1/10.
 //
 
 #include "JumpCV.h"
@@ -49,6 +49,14 @@ bool JumpCV::findChess(IN Mat img, OUT Point &chessPoint) {
         LOGW("findChess no contours available");
         return false;
     }
+    if (((DEBUG_TYPE & (DEBUG_CONTOUR | DEBUG_CHESS)) == (DEBUG_CONTOUR | DEBUG_CHESS))) {
+        for (int i = 0; i < contours.size(); i++) {
+            vector<Point> contour = contours[i];
+            for (int j = 0; j < contour.size(); j++) {
+                g_debugGraphs.push_back(new Graph(TYPE_POINT, new Point(contour[j])));
+            }
+        }
+    }
 
     // 找棋子底座
     double chessArea = 0;
@@ -88,7 +96,9 @@ bool JumpCV::findChess(IN Mat img, OUT Point &chessPoint) {
     }
     chessPoint.x = ((leftCenterPoint.x + rightCenterPoint.x) / 2);
     chessPoint.y = ((leftCenterPoint.y + rightCenterPoint.y) / 2);
-    g_debugGraphs.push_back(new Graph(TYPE_POINT, new Point(chessPoint)));
+    if (DEBUG_TYPE & (DEBUG_CHESS | DEBUG_ALL_DEST)) {
+        g_debugGraphs.push_back(new Graph(TYPE_POINT, new Point(chessPoint)));
+    }
     LOGI("findChess chess center.x=%d, center.y=%d", chessPoint.x, chessPoint.y);
     return true;
 }
@@ -207,12 +217,19 @@ bool JumpCV::findPlatformCircle(IN Mat img, OUT Point &platformPoint) {
 
     int minArea = (int) (3300 * g_density);
     int maxArea = (int) (130000 * g_density);
-    int minHeight = (int) (180 * g_density);
     int minEdgeX = (int) (33 * g_density);
 
     Canny(img, binary, threshold1, threshold2);
     vector<vector<Point> > contours;
     findContours(binary, contours, RETR_TREE, CHAIN_APPROX_SIMPLE);
+    if (((DEBUG_TYPE & (DEBUG_CONTOUR | DEBUG_CIRCLE)) == (DEBUG_CONTOUR | DEBUG_CIRCLE))) {
+        for (int i = 0; i < contours.size(); i++) {
+            vector<Point> contour = contours[i];
+            for (int j = 0; j < contour.size(); j++) {
+                g_debugGraphs.push_back(new Graph(TYPE_ELLIPSE, new Point(contour[j])));
+            }
+        }
+    }
 
     vector<RotatedRect> fitEllipses;
     for (int i = 0; i < contours.size(); i++) {
@@ -221,16 +238,15 @@ bool JumpCV::findPlatformCircle(IN Mat img, OUT Point &platformPoint) {
             continue;
         }
         RotatedRect ellipse = fitEllipse(contour);
+        if (DEBUG_TYPE & DEBUG_CIRCLE) {
+            g_debugGraphs.push_back(new Graph(TYPE_ELLIPSE, new RotatedRect(ellipse)));
+        }
         // 椭圆不能过扁
         if (ellipse.size.width / ellipse.size.height < 0.5) {
             continue;
         }
         // 椭圆是横着的
         if (ellipse.angle < minAngle || ellipse.angle > maxAngle) {
-            continue;
-        }
-        // 排除界面上方的按钮
-        if (ellipse.center.y < minHeight) {
             continue;
         }
         // 排除掉边缘的悬浮窗按钮
@@ -295,6 +311,14 @@ bool JumpCV::findWhitePoint(IN Mat img, OUT Point &whitePoint) {
     if (contours.size() == 0) {
         LOGI("findWhitePoint has no contour");
         return false;
+    }
+    if (((DEBUG_TYPE & (DEBUG_CONTOUR | DEBUG_WHITE_POINT)) == (DEBUG_CONTOUR | DEBUG_WHITE_POINT))) {
+        for (int i = 0; i < contours.size(); i++) {
+            vector<Point> contour = contours[i];
+            for (int j = 0; j < contour.size(); j++) {
+                g_debugGraphs.push_back(new Graph(TYPE_POINT, new Point(contour[j])));
+            }
+        }
     }
 
     // 找白点，要求为横椭圆，面积 pointMinArea ~ pointMaxArea

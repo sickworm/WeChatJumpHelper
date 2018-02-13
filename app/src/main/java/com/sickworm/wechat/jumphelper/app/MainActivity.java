@@ -2,6 +2,7 @@ package com.sickworm.wechat.jumphelper.app;
 
 import android.content.Intent;
 import android.os.Build;
+import android.os.Debug;
 import android.provider.Settings;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -12,6 +13,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.apkfuns.logutils.LogLevel;
 import com.apkfuns.logutils.LogUtils;
 
 
@@ -23,6 +25,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
 
         LogUtils.getLogConfig().configShowBorders(false);
+        if (!BuildConfig.DEBUG) {
+            // 大量 debug 日志影响性能
+            LogUtils.getLogConfig().configLevel(LogLevel.TYPE_INFO);
+        }
 
         Button showButton = findViewById(R.id.btn_show);
         Button hideButton = findViewById(R.id.btn_hide);

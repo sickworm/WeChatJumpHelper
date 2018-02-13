@@ -8,7 +8,7 @@
     <string name="no_chess">寻找棋子失败，停止操作</string>
     <string name="no_platform">寻找下一个跳台失败，退出</string>
     <string name="press_failed">模拟点击失败，退出</string>
-    <string name="no_permission">助手缺少屏幕观察权限，请确认允许录像</string>
+    <string name="no_permission">助手缺少屏幕观察权限或root权限，请保证手机已root，以及点击允许录像</string>
     <string name="screen_record_failed">屏幕画面获取失败，退出</string>
     <string name="already_steps">已跳 %d 步</string>
     <string name="check_root">申请 root 权限</string>

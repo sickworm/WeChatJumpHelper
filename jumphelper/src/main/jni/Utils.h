@@ -1,5 +1,5 @@
 //
-// Created by chope on 2018/2/3.
+// Created by sickworm on 2018/2/3.
 //
 
 #ifndef WECHATJUMPHELPER_UTILS_H_H

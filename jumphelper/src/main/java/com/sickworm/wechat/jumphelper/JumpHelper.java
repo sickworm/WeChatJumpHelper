@@ -55,8 +55,12 @@ public class JumpHelper {
         jumpControllerThread = new Thread() {
             @Override
             public void run() {
-                if (!doStart()) {
+                if (!jumpController.start()) {
+                    onError(JumpError.NO_PERMISSION);
                     return;
+                }
+                if (listener != null) {
+                    listener.onStart();
                 }
                 loop:
                 while (!isInterrupted()) {
@@ -83,28 +87,14 @@ public class JumpHelper {
                             break loop;
                     }
                 }
-                doStop();
+                jumpController.stop();
+                jumpControllerThread = null;
+                if (listener != null) {
+                    listener.onStop();
+                }
             }
         };
         jumpControllerThread.start();
-    }
-
-    private boolean doStart() {
-        if (!jumpController.start()) {
-            return false;
-        }
-        if (listener != null) {
-            listener.onStart();
-        }
-        return true;
-    }
-
-    private void doStop() {
-        jumpController.stop();
-        jumpControllerThread = null;
-        if (listener != null) {
-            listener.onStop();
-        }
     }
 
     public void stop() {

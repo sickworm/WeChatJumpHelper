@@ -88,6 +88,28 @@ public class ApplicationTest extends ApplicationTestCase<Application> {
         }
     }
 
+    public void testAPISpeed() {
+        LogUtils.getLogConfig().configShowBorders(false);
+        LogUtils.d("first log took some time to init");
+        int count = 10000;
+
+        long startTime = System.currentTimeMillis();
+        int i = count;
+        while (i-- > 0) {
+            LogUtils.d("test");
+        }
+        long tookTime = System.currentTimeMillis() - startTime;
+        LogUtils.i("LogUtils took " + tookTime + "ms");
+
+        startTime = System.currentTimeMillis();
+        i = count;
+        while (i-- > 0) {
+            System.currentTimeMillis();
+        }
+        tookTime = System.currentTimeMillis() - startTime;
+        LogUtils.i("System.currentTimeMillis took " + tookTime + "ms");
+    }
+
     public void testOpenCVSpeed() {
         Context context = getSystemContext();
         Size screenSize = ScreenUtils.getScreenSize(context);

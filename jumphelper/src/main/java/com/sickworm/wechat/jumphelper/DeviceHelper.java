@@ -2,6 +2,7 @@ package com.sickworm.wechat.jumphelper;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.PixelFormat;
 import android.hardware.display.DisplayManager;
@@ -63,6 +64,24 @@ public class DeviceHelper {
                 densityDpi, DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC,
                 imageReader.getSurface(), null, null);
 
+        // 测试 root 权限
+        try {
+            Process process = Runtime.getRuntime().exec("su -c ls /");
+            process.waitFor();
+            if (process.exitValue() != 0) {
+                LogUtils.w("no root permission");
+                return false;
+            }
+        } catch (Exception e) {
+            LogUtils.w(e);
+            return false;
+        }
+
+        // 拷贝快速 jump 执行文件到 apk 目录
+        if (copyJumpExecFromAssets(context)) {
+            return false;
+        }
+
         // ImageReader 的截屏准备时间
         try {
             Thread.sleep(1000);
@@ -102,6 +121,29 @@ public class DeviceHelper {
             }
         }
         return permissionGranted;
+    }
+
+    private boolean copyJumpExecFromAssets(Context context) {
+        AssetManager manager = context.getResources().getAssets();
+        try {
+            String[] paths = manager.list("jumpexec");
+            for (String abi : Build.SUPPORTED_ABIS) {
+                for (String path : paths) {
+                    String subPath = path.substring(0, path.indexOf('/'));
+                    if (abi.equals(subPath)) {
+                        return copyJumpExecFromAssets(context, path);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LogUtils.w(e);
+            return false;
+        }
+        return false;
+    }
+
+    private boolean copyJumpExecFromAssets(Context context, String path) {
+        return false;
     }
 
     Bitmap getCurrentFrame() {
@@ -151,49 +193,21 @@ public class DeviceHelper {
     }
 
     /**
-     * sendEvent 发送触摸事件，速度更快，但兼容性不足，目前仅兼容了 Nexus 5
-     * TODO 根据getEvent数据支持自动匹配
+     * sendEvent 发送触摸事件，速度更快。目前仅兼容了 Nexus 5
+     * TODO 通过查询 getEvent 支持自动匹配
      */
     @SuppressWarnings("UnusedReturnValue")
-    private boolean doPressSyncUsingSendEvent(Point point, int pressTimeMill) {
-        String command = String.format(Locale.ENGLISH, "su -c " +
-                "sendevent /dev/input/event1 3 57 62 && " +     // ABS_MT_TRACKING_ID，事件列表 ID，正常值为递增，随意赋值没有实际影响
-                "sendevent /dev/input/event1 3 53 %d && " +     // ABS_MT_POSITION_X，x 坐标，若与上次一致则不发送
-                "sendevent /dev/input/event1 3 54 %d && " +     // ABS_MT_POSITION_Y，y 坐标，若与上次一致则不发送
-                "sendevent /dev/input/event1 3 58 46 && " +     // ABS_MT_PRESSURE，压力值，若与上次一致则不发送
-                "sendevent /dev/input/event1 3 48 4 && " +      // ABS_MT_TOUCH_MAJOR，接触面积，若与上次一致则不发送
-                "sendevent /dev/input/event1 0 0 0",        // 同步此次事件
-                point.x, point.y);
-        String command2 = "su -c " +
-                        "sendevent /dev/input/event1 3 57 4294967295 && " + // ABS_MT_TRACKING_ID，此时为上一次按键的结束，值为 0xfffffff
-                                                                            // 通过 sendevent 发送 0xffffffff，结果会为 7fffffff，但无实际影响
-                        "sendevent /dev/input/event1 0 0 0";               // 同步此次事件
+    private boolean doPressSyncUsingSendEvent(int pressTimeMill) {
         try {
-            LogUtils.d("start jump");
-            long startTime = System.currentTimeMillis();
-            Process process = Runtime.getRuntime().exec(command);
+            Process process = Runtime.getRuntime().exec("su -c data/jump " + pressTimeMill);
             process.waitFor();
-            if (process.exitValue() != 0) {
-                return false;
-            }
-
-            long stepTime = System.currentTimeMillis();
-            LogUtils.d("command took " + (stepTime) + "ms");
-            while(System.currentTimeMillis() - stepTime < pressTimeMill) {
-                Thread.sleep(1);
-            }
-            LogUtils.d("pressed down");
-            Process process2 = Runtime.getRuntime().exec(command2);
-            process2.waitFor();
-            LogUtils.d("stop jump");
-            return process2.exitValue() == 0;
+            return process.exitValue() == 0;
         } catch (IOException e) {
-            LogUtils.e(e);
+            LogUtils.w(e);
             return false;
         } catch (InterruptedException e) {
-            LogUtils.w(e);
             Thread.currentThread().interrupt();
-            return true;
+            return false;
         }
     }
 
@@ -202,7 +216,7 @@ public class DeviceHelper {
             @Override
             public void run() {
                 if (Build.MODEL.contains("HammerHead")) {
-                    doPressSyncUsingSendEvent(point, pressTimeMill);
+                    doPressSyncUsingSendEvent(pressTimeMill);
                 } else {
                     doPressSyncUsingInput(point, pressTimeMill);
                 }
