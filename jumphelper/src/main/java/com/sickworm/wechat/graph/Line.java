@@ -16,14 +16,17 @@ public class Line extends Graph {
 
     public Point start;
     public Point end;
+    public int type;
 
     public Line(int startX, int startY, int endX, int endY) {
         start = new Point(startX, startY);
         end = new Point(endX, endY);
+        type = Graph.TYPE_RED;
     }
 
     @Override
     public void draw(Canvas canvas) {
+        DEFAULT_PAINT.setColor(type);
         canvas.drawLine(start.x, start.y, end.x, end.y, DEFAULT_PAINT);
     }
 }

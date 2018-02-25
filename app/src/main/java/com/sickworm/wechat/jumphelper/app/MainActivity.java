@@ -24,12 +24,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        LogUtils.getLogConfig().configShowBorders(false);
-        if (!BuildConfig.DEBUG) {
-            // 大量 debug 日志影响性能
-            LogUtils.getLogConfig().configLevel(LogLevel.TYPE_INFO);
-        }
-
         Button showButton = findViewById(R.id.btn_show);
         Button hideButton = findViewById(R.id.btn_hide);
         Button checkRootButton = findViewById(R.id.btn_check_root);

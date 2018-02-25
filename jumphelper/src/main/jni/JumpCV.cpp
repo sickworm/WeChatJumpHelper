@@ -131,7 +131,7 @@ bool JumpCV::findPlatformSquare(IN Mat img, OUT Point &platformPoint) {
     int minLineHeadGap = (int) (3.3 * g_density);
     int minLineTailDistance = (int) (18 * g_density);
 
-    GaussianBlur(img, blu, Size(7, 7), 2, 2);
+    GaussianBlur(img, blu, Size(3, 3), 2, 2);
     Canny(blu, binary, threshold1, threshold2);
 
     // 找直线
@@ -152,7 +152,12 @@ bool JumpCV::findPlatformSquare(IN Mat img, OUT Point &platformPoint) {
         }
     }
     sort(lines.begin(), lines.end(), cmp);
-    
+    if (DEBUG_TYPE & DEBUG_SQUARE) {
+        for (int i = 0; i < lines.size(); i++) {
+            g_debugGraphs.push_back(new Graph(TYPE_LINE, new Vec4i(lines[i])));
+        }
+    }
+
     // 寻找两头相接的直线，且夹角范围为 standardAngle +- angleDeviation
     vector<Vec4i> foundLines;
     Vec4i lastLine = Vec4i(0, 0, 0, 0);
@@ -163,9 +168,6 @@ bool JumpCV::findPlatformSquare(IN Mat img, OUT Point &platformPoint) {
             abs(lastLine[2] - line[2]) < minLineTailDistance) {
             lastLine = line;
             continue;
-        }
-        if (DEBUG_TYPE & DEBUG_SQUARE) {
-            g_debugGraphs.push_back(new Graph(TYPE_LINE, new Vec4i(line)));
         }
         if ((line[2] - line[0] == 0) || (lastLine[2] - line[0] == 0)) {
             continue;

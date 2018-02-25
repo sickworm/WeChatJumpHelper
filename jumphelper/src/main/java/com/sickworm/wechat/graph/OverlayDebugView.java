@@ -7,8 +7,10 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
+import android.view.MotionEvent;
 import android.view.View;
 
+import com.apkfuns.logutils.LogUtils;
 import com.sickworm.wechat.graph.Graph;
 import com.sickworm.wechat.graph.Point;
 
@@ -23,7 +25,6 @@ import java.util.List;
 
 public class OverlayDebugView extends View {
     private static volatile OverlayDebugView instance;
-    private static final Handler MAIN_HANDLER = new Handler(Looper.getMainLooper());
     private List<Graph> graphs = new ArrayList<>();
 
     /**
@@ -71,11 +72,6 @@ public class OverlayDebugView extends View {
 
     public void setGraphs(List<Graph> graphs) {
         this.graphs = graphs;
-        MAIN_HANDLER.post(new Runnable() {
-            @Override
-            public void run() {
-                invalidate();
-            }
-        });
+        postInvalidate();
     }
 }

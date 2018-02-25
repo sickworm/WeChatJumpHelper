@@ -38,6 +38,12 @@ public class MyService extends Service {
     }
 
     @Override
+    public void onDestroy() {
+        floatingView.hide();
+        super.onDestroy();
+    }
+
+    @Override
     public IBinder onBind(Intent intent){
         return null;
     }

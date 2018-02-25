@@ -15,7 +15,11 @@ import com.apkfuns.logutils.LogUtils;
 import com.sickworm.wechat.graph.Point;
 import com.sickworm.wechat.graph.Size;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
@@ -35,6 +39,7 @@ public class DeviceHelper {
     private ImageReader imageReader;
     private Bitmap cache = null;
     private ExecutorService singleExecutor = Executors.newSingleThreadExecutor();
+    private String jumpExecPath;
 
     public static DeviceHelper getInstance() {
         if (instance == null) {
@@ -53,8 +58,10 @@ public class DeviceHelper {
     boolean start(Context context) {
         Size screenSize = ScreenUtils.getScreenSize(context);
         int densityDpi = ScreenUtils.getDensityDpi(context);
+        String jumpExecDir = context.getDir("exec", Context.MODE_PRIVATE).getPath();
+        jumpExecPath = jumpExecDir + "/jump";
 
-        // TODO 独立申请权限接口，此处仅检测
+        // TODO 使用独立申请权限接口，此处仅作检测
         if (!getRecordPermission(context)) {
             return false;
         }
@@ -78,7 +85,7 @@ public class DeviceHelper {
         }
 
         // 拷贝快速 jump 执行文件到 apk 目录
-        if (copyJumpExecFromAssets(context)) {
+        if (!copyJumpExecFromAssets(context)) {
             return false;
         }
 
@@ -129,9 +136,9 @@ public class DeviceHelper {
             String[] paths = manager.list("jumpexec");
             for (String abi : Build.SUPPORTED_ABIS) {
                 for (String path : paths) {
-                    String subPath = path.substring(0, path.indexOf('/'));
-                    if (abi.equals(subPath)) {
-                        return copyJumpExecFromAssets(context, path);
+                    if (abi.equals(path)) {
+                        String fullPath = "jumpexec/" + path + "/jump";
+                        return copyJumpExecFromAssets(context, fullPath);
                     }
                 }
             }
@@ -143,10 +150,48 @@ public class DeviceHelper {
     }
 
     private boolean copyJumpExecFromAssets(Context context, String path) {
-        return false;
+        AssetManager manager = context.getResources().getAssets();
+        InputStream in = null;
+        OutputStream out = null;
+        try {
+            in = manager.open(path);
+            File des = new File(jumpExecPath);
+            if (des.exists()) {
+                if (!des.delete()) {
+                    LogUtils.w("delete old jump file failed");
+                    return false;
+                }
+            }
+            out = new FileOutputStream(des);
+            byte[] buffer = new byte[1024];
+            int length;
+            while((length = in.read(buffer)) != -1) {
+                out.write(buffer, 0, length);
+            }
+            if (!des.setExecutable(true)) {
+                LogUtils.w("set jump executable failed");
+                return false;
+            }
+            return true;
+        } catch (IOException e) {
+            LogUtils.w(e);
+            return false;
+        } finally {
+            try {
+                if (in != null) {
+                    in.close();
+                }
+                if (out != null) {
+                    out.close();
+                }
+            } catch (IOException e) {
+                LogUtils.w(e);
+            }
+        }
     }
 
     Bitmap getCurrentFrame() {
+        long startTime = System.currentTimeMillis();
         if (imageReader == null) {
             return null;
         }
@@ -159,6 +204,8 @@ public class DeviceHelper {
             }
             imageToBitmap(image, cache);
             image.close();
+            long usedTime = System.currentTimeMillis() - startTime;
+            LogUtils.i("get frame use %d ms", usedTime);
             return cache;
         } catch (Exception e) {
             LogUtils.e("getCurrentFrame failed, e: " + e.getLocalizedMessage());
@@ -194,12 +241,12 @@ public class DeviceHelper {
 
     /**
      * sendEvent 发送触摸事件，速度更快。目前仅兼容了 Nexus 5
-     * TODO 通过查询 getEvent 支持自动匹配
+     * TODO 通过查询 getevent 支持自动匹配
      */
     @SuppressWarnings("UnusedReturnValue")
     private boolean doPressSyncUsingSendEvent(int pressTimeMill) {
         try {
-            Process process = Runtime.getRuntime().exec("su -c data/jump " + pressTimeMill);
+            Process process = Runtime.getRuntime().exec("su -c " + jumpExecPath + " " + pressTimeMill);
             process.waitFor();
             return process.exitValue() == 0;
         } catch (IOException e) {

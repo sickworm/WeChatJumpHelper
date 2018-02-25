@@ -55,7 +55,7 @@ public class FloatingView extends FrameLayout {
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN | WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR;
         debugViewParams.width = LayoutParams.MATCH_PARENT;
         debugViewParams.height = LayoutParams.MATCH_PARENT;
-        floatingManager.addView(OverlayDebugView.init(getContext()), debugViewParams);
+//        floatingManager.addView(OverlayDebugView.init(getContext()), debugViewParams);
 
         params = new WindowManager.LayoutParams();
 

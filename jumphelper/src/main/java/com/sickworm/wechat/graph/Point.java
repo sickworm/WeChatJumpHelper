@@ -3,12 +3,14 @@ package com.sickworm.wechat.graph;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 
+import java.util.Locale;
+
 public class Point extends Graph {
     private static final Paint DEFAULT_PAINT;
 
     static {
         DEFAULT_PAINT = new Paint();
-        DEFAULT_PAINT.setColor(0xFFFF0000);
+        DEFAULT_PAINT.setColor(Graph.TYPE_RED);
         DEFAULT_PAINT.setStyle(Paint.Style.STROKE);
         DEFAULT_PAINT.setStrokeCap(Paint.Cap.ROUND);
         DEFAULT_PAINT.setStrokeWidth(16);
@@ -17,12 +19,12 @@ public class Point extends Graph {
     public int x;
     public int y;
     /**
-     * 用于区分点类型，暂时没用用上
+     * 用于区分点类型，值为颜色
      */
     public int type;
 
     public Point(int x, int y) {
-        this(x, y, 0);
+        this(x, y, Graph.TYPE_RED);
     }
 
     public Point(int x, int y, int type) {
@@ -42,6 +44,12 @@ public class Point extends Graph {
 
     @Override
     public void draw(Canvas canvas) {
+        DEFAULT_PAINT.setColor(type);
         canvas.drawPoint(x, y, DEFAULT_PAINT);
+    }
+
+    @Override
+    public String toString() {
+        return String.format(Locale.ENGLISH, "(% 4d, % 4d)", x, y);
     }
 }

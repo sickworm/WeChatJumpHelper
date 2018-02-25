@@ -2,19 +2,20 @@ package com.sickworm.wechat.jumphelper;
 
 import android.content.Context;
 
+import com.apkfuns.logutils.LogLevel;
 import com.apkfuns.logutils.LogUtils;
-import com.sickworm.wechat.graph.Graph;
 import com.sickworm.wechat.graph.Point;
 
-import java.util.List;
-
 /**
- * 跳一跳 SDK 接口类
+ * 自动跳一跳助手 SDK 接口类
  *
  * Created by sickworm on 2017/12/30.
  */
 public class JumpHelper {
-    private static final int STEP_DURATION_MILL = 2000;
+    /**
+     * 松手后跳跃动画等待时间
+     */
+    private static final int STEP_DURATION_MILL = 1000;
     private static final double DEFAULT_CORRECTION_VALUE = 1;
     private static volatile JumpHelper instance;
 
@@ -25,6 +26,8 @@ public class JumpHelper {
 
     static {
         LogUtils.getLogConfig().configShowBorders(false);
+        // 大量 debug 日志影响性能
+        LogUtils.getLogConfig().configLevel(LogLevel.TYPE_INFO);
     }
 
     public static JumpHelper getInstance() {
@@ -42,7 +45,11 @@ public class JumpHelper {
         this.correctionValue = DEFAULT_CORRECTION_VALUE;
     }
 
-    public void setDetaultCorrectionValue(double correctionValue) {
+    /**
+     * 设置跳一跳“距离->时间”系数修正值
+     */
+    @SuppressWarnings("unused")
+    public void setDefaultCorrectionValue(double correctionValue) {
         this.correctionValue = correctionValue;
     }
 
@@ -70,7 +77,7 @@ public class JumpHelper {
                     JumpController.Result result = jumpController.next();
                     switch (result.error) {
                         case OK:
-                            if (listener != null && !isInterrupted()) {
+                            if (listener != null) {
                                 listener.onStep(result.fromPoint, result.toPoint, result.pressTimeMill);
                             }
                             try {

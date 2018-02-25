@@ -88,8 +88,7 @@ class JumpController {
                 (int) (screenSize.width * ROI_TOP_X_SCALE),
                 (int) (screenSize.height * ROI_TOP_Y_SCALE),
                 (int) (screenSize.width * (ROI_BOTTOM_X_SCALE - ROI_TOP_X_SCALE)),
-                (int) (screenSize.height * (ROI_BOTTOM_Y_SCALE - ROI_TOP_Y_SCALE))
-        );
+                (int) (screenSize.height * (ROI_BOTTOM_Y_SCALE - ROI_TOP_Y_SCALE)));
     }
 
     boolean start() {
@@ -104,6 +103,9 @@ class JumpController {
         int count = STABLE_WAIT_COUNT;
         OverlayDebugView debugView = OverlayDebugView.getInstance();
 
+        if (debugView != null) {
+            debugView.setGraphs(null);
+        }
         if (!getNextROIScreenMat()) {
             return new Result(JumpError.SCREEN_RECORD_FAILED);
         }
@@ -114,9 +116,6 @@ class JumpController {
 
             if (STORE_FRAME) {
                 saveMat(currentROIFrame);
-            }
-            if (debugView != null) {
-                debugView.setGraphs(null);
             }
             jumpCVDetector.clearDebugGraphs();
 
@@ -135,15 +134,24 @@ class JumpController {
 
         Point chessPoint = jumpCVDetector.getLastChessPosition();
         if (chessPoint == null) {
+            if (debugView != null) {
+                debugView.setGraphs(null);
+            }
             return new Result(JumpError.NO_CHESS);
         }
 
         Point platformPoint = jumpCVDetector.getLastPlatformPosition();
         if (platformPoint == null) {
+            if (debugView != null) {
+                debugView.setGraphs(null);
+            }
             return new Result(JumpError.NO_PLATFORM);
         }
 
         if (count < 0) {
+            if (debugView != null) {
+                debugView.setGraphs(null);
+            }
             return new Result(JumpError.NOT_STABLE);
         }
 
@@ -211,10 +219,6 @@ class JumpController {
         }
         graphs.add(roi);
         return graphs;
-    }
-
-    private void clearDebugGraphs() {
-        jumpCVDetector.clearDebugGraphs();
     }
 
     static class Result {
