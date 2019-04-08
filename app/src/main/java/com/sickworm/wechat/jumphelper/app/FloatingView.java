@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.PixelFormat;
+import android.os.Build;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -48,21 +49,33 @@ public class FloatingView extends FrameLayout {
         debugViewParams.x = 0;
         debugViewParams.y = 0;
         //总是出现在应用程序窗口之上
-        debugViewParams.type = WindowManager.LayoutParams.TYPE_SYSTEM_ALERT;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
+            debugViewParams.type = WindowManager.LayoutParams.TYPE_SYSTEM_ALERT;
+        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            debugViewParams.type = WindowManager.LayoutParams.TYPE_APPLICATION_PANEL;
+        } else {
+            debugViewParams.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
+        }
         //设置图片格式，效果为背景透明
         debugViewParams.format = PixelFormat.RGBA_8888;
         debugViewParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE |
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN | WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR;
         debugViewParams.width = LayoutParams.MATCH_PARENT;
         debugViewParams.height = LayoutParams.MATCH_PARENT;
-//        floatingManager.addView(OverlayDebugView.init(getContext()), debugViewParams);
+        floatingManager.addView(OverlayDebugView.init(getContext()), debugViewParams);
 
         params = new WindowManager.LayoutParams();
 
         params.gravity = Gravity.TOP | Gravity.START;
         params.x = 0;
         params.y = startYPx;
-        params.type = WindowManager.LayoutParams.TYPE_SYSTEM_ALERT;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
+            params.type = WindowManager.LayoutParams.TYPE_SYSTEM_ALERT;
+        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            params.type = WindowManager.LayoutParams.TYPE_APPLICATION_PANEL;
+        } else {
+            params.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
+        }
         params.format = PixelFormat.RGBA_8888;
         params.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN | WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR;
@@ -97,6 +110,9 @@ public class FloatingView extends FrameLayout {
                     mOriginY = params.y;
                     break;
                 case MotionEvent.ACTION_MOVE:
+                    if (event.getRawX() == mTouchStartX && event.getRawY() == mTouchStartY) {
+                        break;
+                    }
                     moved = true;
                     params.x = mOriginX - mTouchStartX + (int) event.getRawX();
                     params.y = mOriginY - mTouchStartY + (int) event.getRawY();

@@ -33,11 +33,14 @@ class JumpController {
     /**
      * 距离 dp 转换为按压时间 s 的系数1
      */
-    private static final double DEFAULT_SCALE = 4.14;
+//    private static final double DEFAULT_SCALE = 4.14; // nexus 5
+    private static final double DEFAULT_SCALE = 3.60; // one plus 6T
+
     /**
      * 距离 dp 转换为按压时间 s 的系数2
      */
-    private static final int DEFAULT_SCALE2 = 120000;
+//    private static final int DEFAULT_SCALE2 = 120000; // nexus 5
+    private static final int DEFAULT_SCALE2 = 100000; // one plus 6T
     /**
      * 检测区域 x 上限
      */
